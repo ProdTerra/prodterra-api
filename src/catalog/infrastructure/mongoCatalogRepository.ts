@@ -26,7 +26,7 @@ export class MongoCatalogRepository extends CatalogRepository {
   }
 
   findCrops(): Promise<Crop[]> {
-    return this.cropModel.find({}, withoutDatabaseId).lean<Crop[]>().exec();
+    return this.cropModel.find({}, withoutDatabaseId).sort({ key: 1 }).lean<Crop[]>().exec();
   }
 
   findCropByKey(key: string): Promise<Crop | null> {
