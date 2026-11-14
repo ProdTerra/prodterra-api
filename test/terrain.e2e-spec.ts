@@ -10,6 +10,10 @@ class FixedElevationProvider extends ElevationProvider {
   async findElevationInMeters({ longitude }: Coordinates): Promise<number | null> {
     return longitude < -100 ? null : 2155;
   }
+
+  async findElevationStatistics(): Promise<null> {
+    return null;
+  }
 }
 
 describe('GET /terrain/elevation', () => {
