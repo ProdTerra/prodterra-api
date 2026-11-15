@@ -84,9 +84,11 @@ describe('parseRotationEvaluationRequest', () => {
     expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [lot] }, today).valid).toBe(true);
   });
 
-  it('rejects past start dates and blocks shorter than two weeks', () => {
+  it('rejects past start dates and empty blocks but accepts a rest of 3 days', () => {
     expect(parseRotationEvaluationRequest({ startDate: '2026-10-01', lots: [lot] }, today).valid).toBe(false);
-    const shortBlock = { ...lot, blocks: [{ kind: 'rest', durationInDays: 7 }] };
-    expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [shortBlock] }, today).valid).toBe(false);
+    const emptyBlock = { ...lot, blocks: [{ kind: 'rest', durationInDays: 0 }] };
+    expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [emptyBlock] }, today).valid).toBe(false);
+    const shortRest = { ...lot, blocks: [{ kind: 'rest', durationInDays: 3 }] };
+    expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [shortRest] }, today).valid).toBe(true);
   });
 });
