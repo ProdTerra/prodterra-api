@@ -22,7 +22,8 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "db:seed": "nest build && node dist/database/seedDatabase.js",
     "db:clean": "nest build && node dist/database/cleanDatabase.js",
-    "db:reset": "nest build && node dist/database/cleanDatabase.js --confirm && node dist/database/seedDatabase.js"
+    "db:reset": "nest build && node dist/database/cleanDatabase.js --confirm && node dist/database/seedDatabase.js",
+    "db:seed:demo": "nest build && node dist/database/seedDemoDatabase.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
