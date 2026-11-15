@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { AccountsModule } from './accounts/accounts.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { CatalogModule } from './catalog/catalog.module.js';
@@ -23,6 +24,7 @@ import { TerrainModule } from './terrain/terrain.module.js';
     ClimateModule,
     CatalogModule,
     PlanningModule,
+    AccountsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

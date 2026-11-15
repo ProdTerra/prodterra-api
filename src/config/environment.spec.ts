@@ -22,4 +22,11 @@ describe('validateEnvironment', () => {
       expect(() => validateEnvironment({ MONGODB_URI: atlasUri, DB_NAME: invalidName })).toThrow(/DB_NAME/);
     }
   });
+
+  it('accepts an empty session cookie domain and rejects one that is not a domain', () => {
+    expect(validateEnvironment({ MONGODB_URI: atlasUri, DB_NAME: 'prodterra', SESSION_COOKIE_DOMAIN: '' }).SESSION_COOKIE_DOMAIN).toBeUndefined();
+    expect(() => validateEnvironment({ MONGODB_URI: atlasUri, DB_NAME: 'prodterra', SESSION_COOKIE_DOMAIN: 'evil.com; Secure' })).toThrow(
+      /SESSION_COOKIE_DOMAIN/,
+    );
+  });
 });

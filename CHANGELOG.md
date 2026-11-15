@@ -4,10 +4,13 @@
 
 ### Added
 - `GET /catalog/crops` returns `referenceCycleInDays`, the single crop cycle the farmer sees as the default duration.
+- Accounts: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout` and `GET /auth/me`, with argon2id passwords, a 30-day httpOnly `prodterra_session` cookie (only its SHA-256 hash is stored), field-specific error codes and 10 requests per minute per IP on register and login.
+- `SESSION_COOKIE_DOMAIN` (optional) sets the session cookie domain.
 
 ### Changed
 - The demo seed keeps the official MAG/SEPSA cycles and only fills the crops without a source (lettuce 75 days, chayote 150 days).
 - Planning uses the same reference cycle as the catalog.
+- CORS allows credentials for the configured `WEB_ORIGIN` origins.
 
 ## 0.1.0 - 2026-11-14
 
