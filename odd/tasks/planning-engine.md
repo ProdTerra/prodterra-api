@@ -14,8 +14,8 @@ Branches: api feature/planning-engine (from feature/catalog-focus-crops); web fe
 - S8: "iugla el tema de dividir funciona super bien pero se podria mejorar"
 
 ## Tasks
-- T1 [S2-S4] API domain rules: harvest month, monthly status/alerts, recommendation scoring with reasons — route: inline — status: in progress
-- T2 [S1-S4] API POST /plans using catalog + lot climate profiles — route: inline — status: pending
+- T1 [S2-S4] API domain rules: harvest month, monthly status/alerts, recommendation scoring with reasons — route: inline — status: done (commit 1fb21a8)
+- T2 [S1-S4] API POST /plans using catalog + lot climate profiles — route: inline — status: done (unit 66, e2e 11; real local call 1.0 s for 2 lots)
 - T3 [S5, S6] Web calendar step (day grid colored by status, lots rows, alarms by priority, month navigation) — route: inline — status: pending
 - T4 [S7] Button system across the web app — route: inline — status: pending
 - T6 [S8] Better split: strips aligned to the farm's long axis and a grid option — route: inline — status: pending
@@ -27,3 +27,4 @@ Branches: api feature/planning-engine (from feature/catalog-focus-crops); web fe
 - L3 (2026-11-14): "necesito mejorar botones tambien en toda la app, ya esta super bien pero alguno son un texto muy basico como Volver a marcar la finca, etc"
 - L4 (2026-11-14): "iugla el tema de dividir funciona super bien pero se podria mejorar" — planned: strips aligned to the farm's long axis, grid option.
 - L5 (2026-11-14): "la estetica mas intuible en mobile y destop" — covered in the final pass (T5) screen by screen at both sizes.
+- L6 (2026-11-14): real POST /plans on development DB: potato planted 2026-09 -> harvest 2027-01, next lettuce Feb-May with drought risk Feb-Apr (no irrigation); fallow lot -> carrot now. Improvement noted: shift sowing to avoid risk months.

@@ -18,6 +18,6 @@ import { CatalogController } from './presentation/catalog.controller.js';
   ],
   controllers: [CatalogController],
   providers: [CatalogService, MongoCatalogRepository, { provide: CatalogRepository, useExisting: MongoCatalogRepository }],
-  exports: [MongoCatalogRepository],
+  exports: [MongoCatalogRepository, CatalogRepository],
 })
 export class CatalogModule {}
