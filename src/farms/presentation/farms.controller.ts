@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -14,7 +15,7 @@ import {
 import { CurrentUser } from '../../accounts/presentation/currentUser.js';
 import { SessionGuard } from '../../accounts/presentation/sessionGuard.js';
 import type { User } from '../../accounts/domain/user.js';
-import { validateSavedFarmInput, type SavedFarm, type SavedFarmInput, type SavedFarmSummary } from '../domain/savedFarm.js';
+import { isFarmNameTaken, validateSavedFarmInput, type SavedFarm, type SavedFarmInput, type SavedFarmSummary } from '../domain/savedFarm.js';
 import { SavedFarmRepository } from '../domain/savedFarmRepository.js';
 
 type SavedFarmResponse = Omit<SavedFarm, 'ownerId'>;
@@ -35,6 +36,10 @@ function farmNotFound(): NotFoundException {
   return new NotFoundException({ errors: [{ code: 'farmNotFound' }] });
 }
 
+function farmNameTaken(): ConflictException {
+  return new ConflictException({ errors: [{ field: 'name', code: 'nameTaken' }] });
+}
+
 @Controller('farms')
 @UseGuards(SessionGuard)
 export class FarmsController {
@@ -47,7 +52,9 @@ export class FarmsController {
 
   @Post()
   async create(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<SavedFarmResponse> {
-    return toResponse(await this.savedFarmRepository.create(user.id, parseInput(body), new Date()));
+    const input = parseInput(body);
+    await this.ensureNameIsFree(user.id, input.name);
+    return toResponse(await this.savedFarmRepository.create(user.id, input, new Date()));
   }
 
   @Get(':farmId')
@@ -65,7 +72,9 @@ export class FarmsController {
     @Param('farmId') farmId: string,
     @Body() body: Record<string, unknown>,
   ): Promise<SavedFarmResponse> {
-    const farm = await this.savedFarmRepository.updateOwned(user.id, farmId, parseInput(body), new Date());
+    const input = parseInput(body);
+    await this.ensureNameIsFree(user.id, input.name, farmId);
+    const farm = await this.savedFarmRepository.updateOwned(user.id, farmId, input, new Date());
     if (!farm) {
       throw farmNotFound();
     }
@@ -77,6 +86,12 @@ export class FarmsController {
   async remove(@CurrentUser() user: User, @Param('farmId') farmId: string): Promise<void> {
     if (!(await this.savedFarmRepository.deleteOwned(user.id, farmId))) {
       throw farmNotFound();
+    }
+  }
+
+  private async ensureNameIsFree(ownerId: string, name: string, exceptFarmId?: string): Promise<void> {
+    if (isFarmNameTaken(await this.savedFarmRepository.listByOwner(ownerId), name, exceptFarmId)) {
+      throw farmNameTaken();
     }
   }
 }
