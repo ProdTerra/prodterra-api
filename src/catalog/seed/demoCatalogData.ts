@@ -13,7 +13,6 @@ type DemoCropValues = {
   demandLevel: DemandLevel;
   nutrients: NutrientDemand[];
   altitudeInMeters: Range;
-  latitudeInDegrees: Range;
   temperatureInCelsius: Range;
   waterNeedInMillimetersPerCycle: Range;
   relativeHumidityInPercent: Range;
@@ -41,7 +40,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'high',
     nutrients: [{ nutrient: 'K', level: 'high' }, { nutrient: 'N', level: 'medium' }, { nutrient: 'P', level: 'medium' }],
     altitudeInMeters: range(1500, 3200),
-    latitudeInDegrees: range(-45, 60),
     temperatureInCelsius: range(8, 22),
     waterNeedInMillimetersPerCycle: range(500, 700),
     relativeHumidityInPercent: range(70, 90),
@@ -51,7 +49,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'medium',
     nutrients: [{ nutrient: 'K', level: 'medium' }, { nutrient: 'N', level: 'medium' }, { nutrient: 'S', level: 'medium' }],
     altitudeInMeters: range(1300, 2400),
-    latitudeInDegrees: range(-40, 50),
     temperatureInCelsius: range(12, 25),
     waterNeedInMillimetersPerCycle: range(350, 550),
     relativeHumidityInPercent: range(60, 80),
@@ -61,7 +58,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'medium',
     nutrients: [{ nutrient: 'K', level: 'medium' }, { nutrient: 'N', level: 'low' }],
     altitudeInMeters: range(1400, 2800),
-    latitudeInDegrees: range(-45, 60),
     temperatureInCelsius: range(12, 22),
     waterNeedInMillimetersPerCycle: range(350, 550),
     relativeHumidityInPercent: range(65, 85),
@@ -71,7 +67,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'high',
     nutrients: [{ nutrient: 'N', level: 'high' }, { nutrient: 'K', level: 'high' }, { nutrient: 'Ca', level: 'medium' }],
     altitudeInMeters: range(1200, 3000),
-    latitudeInDegrees: range(-45, 60),
     temperatureInCelsius: range(13, 22),
     waterNeedInMillimetersPerCycle: range(380, 500),
     relativeHumidityInPercent: range(70, 90),
@@ -81,7 +76,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'low',
     nutrients: [{ nutrient: 'N', level: 'low' }, { nutrient: 'K', level: 'low' }],
     altitudeInMeters: range(1000, 2800),
-    latitudeInDegrees: range(-45, 60),
     temperatureInCelsius: range(12, 20),
     waterNeedInMillimetersPerCycle: range(250, 350),
     relativeHumidityInPercent: range(60, 80),
@@ -91,7 +85,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'medium',
     nutrients: [{ nutrient: 'K', level: 'medium' }, { nutrient: 'N', level: 'medium' }],
     altitudeInMeters: range(500, 2000),
-    latitudeInDegrees: range(-30, 30),
     temperatureInCelsius: range(16, 26),
     waterNeedInMillimetersPerCycle: range(1200, 1800),
     relativeHumidityInPercent: range(70, 90),
@@ -101,7 +94,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'high',
     nutrients: [{ nutrient: 'K', level: 'high' }, { nutrient: 'N', level: 'high' }, { nutrient: 'Ca', level: 'medium' }],
     altitudeInMeters: range(0, 2000),
-    latitudeInDegrees: range(-40, 50),
     temperatureInCelsius: range(18, 28),
     waterNeedInMillimetersPerCycle: range(400, 600),
     relativeHumidityInPercent: range(60, 80),
@@ -111,7 +103,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'high',
     nutrients: [{ nutrient: 'N', level: 'high' }, { nutrient: 'K', level: 'high' }, { nutrient: 'S', level: 'medium' }],
     altitudeInMeters: range(1200, 2800),
-    latitudeInDegrees: range(-45, 60),
     temperatureInCelsius: range(13, 22),
     waterNeedInMillimetersPerCycle: range(400, 500),
     relativeHumidityInPercent: range(70, 90),
@@ -121,7 +112,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'high',
     nutrients: [{ nutrient: 'N', level: 'high' }, { nutrient: 'K', level: 'high' }, { nutrient: 'Ca', level: 'medium' }],
     altitudeInMeters: range(1200, 2800),
-    latitudeInDegrees: range(-45, 60),
     temperatureInCelsius: range(13, 21),
     waterNeedInMillimetersPerCycle: range(400, 500),
     relativeHumidityInPercent: range(70, 90),
@@ -131,7 +121,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     demandLevel: 'medium',
     nutrients: [{ nutrient: 'K', level: 'medium' }, { nutrient: 'N', level: 'medium' }, { nutrient: 'Ca', level: 'low' }],
     altitudeInMeters: range(1200, 2500),
-    latitudeInDegrees: range(-40, 55),
     temperatureInCelsius: range(15, 24),
     waterNeedInMillimetersPerCycle: range(400, 600),
     relativeHumidityInPercent: range(60, 80),

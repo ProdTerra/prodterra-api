@@ -13,7 +13,6 @@ function crop(key: string, familyKey: string, demandLevel: DemandLevel, nutrient
     demandLevel,
     nutrients,
     altitudeInMeters: altitude,
-    latitudeInDegrees: range(-45, 60),
     temperatureInCelsius: range(8, 24),
     waterNeedInMillimetersPerCycle: range(300, 500),
     relativeHumidityInPercent: range(60, 95),

@@ -19,7 +19,6 @@ export type Crop = {
   demandLevel: DemandLevel | null;
   nutrients: NutrientDemand[];
   altitudeInMeters: Range;
-  latitudeInDegrees: Range;
   temperatureInCelsius: Range;
   waterNeedInMillimetersPerCycle: Range;
   relativeHumidityInPercent: Range;
