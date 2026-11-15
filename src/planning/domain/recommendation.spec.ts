@@ -92,3 +92,29 @@ describe('recommendNextCrops', () => {
     expect(recommendations[0].reasons).toContainEqual({ type: 'climateFit', suitableMonths: 4, totalMonths: 4, positive: true });
   });
 });
+
+describe('choosing when to sow', () => {
+  const drySeasonClimate: MonthlyClimate[] = mildClimate.map((month) => ({
+    ...month,
+    precipitationInMillimetersPerDay: month.month >= 1 && month.month <= 4 ? 0.5 : 8,
+  }));
+
+  it('waits for the rains when sowing right away would face a dry season without irrigation', () => {
+    const recommendations = recommendNextCrops({
+      ...baseInput,
+      climate: drySeasonClimate,
+      hasIrrigation: false,
+      sowMonth: '2027-02',
+      lastCrop: potato,
+    });
+    const lettuceRecommendation = recommendations.find((recommendation) => recommendation.cropKey === 'lettuce');
+    expect(lettuceRecommendation?.sowMonth).toBe('2027-05');
+    expect(lettuceRecommendation?.reasons).toContainEqual({ type: 'waitForBetterMonth', months: 3, positive: true });
+  });
+
+  it('sows right away when the climate already suits the crop', () => {
+    const recommendations = recommendNextCrops({ ...baseInput, lastCrop: potato });
+    expect(recommendations[0].sowMonth).toBe('2026-12');
+    expect(recommendations[0].reasons.some((reason) => reason.type === 'waitForBetterMonth')).toBe(false);
+  });
+});

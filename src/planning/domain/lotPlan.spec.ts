@@ -64,10 +64,12 @@ describe('buildLotPlan', () => {
     expect(plan.recommendations).toHaveLength(3);
   });
 
-  it('plants the recommended crop right away on a resting lot', () => {
+  it('leaves a resting lot free until the recommended sowing month and then shows the new crop', () => {
     const plan = buildLotPlan({ ...baseInput, currentUse: { kind: 'fallow' }, previousUse: { kind: 'crop', cropKey: 'potato' } });
     expect(plan.currentCrop).toBeNull();
-    expect(plan.months[0]).toMatchObject({ month: '2026-11', phase: 'next', cropKey: plan.nextCrop?.cropKey });
+    const firstPlantedIndex = plan.months.findIndex((month) => month.phase === 'next');
+    expect(plan.months[firstPlantedIndex]).toMatchObject({ month: plan.nextCrop?.sowMonth, cropKey: plan.nextCrop?.cropKey });
+    expect(plan.months.slice(0, firstPlantedIndex).every((month) => month.phase === 'free')).toBe(true);
   });
 
   it('marks months after the next harvest as free', () => {
@@ -89,7 +91,7 @@ describe('buildLotPlan', () => {
 
   it('treats a crop whose harvest already passed as harvested', () => {
     const plan = buildLotPlan({ ...baseInput, currentUse: { kind: 'crop', cropKey: 'lettuce', plantedOn: '2026-01' } });
-    expect(plan.months[0].phase).toBe('next');
+    expect(plan.months.some((month) => month.phase === 'current')).toBe(false);
     expect(plan.currentCrop?.harvestMonth).toBe('2026-03');
   });
 });

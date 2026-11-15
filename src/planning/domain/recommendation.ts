@@ -2,7 +2,7 @@ import type { Range } from '../../catalog/domain/catalogValues.js';
 import type { Crop, Nutrient } from '../../catalog/domain/crop.js';
 import type { Pest } from '../../catalog/domain/pest.js';
 import type { MonthlyClimate } from '../../climate/domain/monthlyClimate.js';
-import { harvestMonth, monthNumberOf, monthsBetween, monthsFrom, type MonthKey } from './monthKeys.js';
+import { addMonths, harvestMonth, monthNumberOf, monthsBetween, monthsFrom, type MonthKey } from './monthKeys.js';
 import { assessMonth } from './monthlyAssessment.js';
 
 export type PreviousUse = { kind: 'crop'; cropKey: string } | { kind: 'fallow' } | { kind: 'unknown' };
@@ -18,7 +18,8 @@ export type RecommendationReason =
   | { type: 'unknownHistory'; positive: false }
   | { type: 'altitudeOutOfRange'; positive: false }
   | { type: 'climateFit'; suitableMonths: number; totalMonths: number; positive: boolean }
-  | { type: 'pestMonths'; months: number; positive: false };
+  | { type: 'pestMonths'; months: number; positive: false }
+  | { type: 'waitForBetterMonth'; months: number; positive: true };
 
 export type CropRecommendation = {
   cropKey: string;
@@ -52,6 +53,7 @@ const weights = {
 };
 
 const defaultCycleLengthInDays = 90;
+const maximumSowingDelayInMonths = 3;
 const levelOrder = { high: 3, medium: 2, low: 1 } as const;
 
 function dominantNutrient(crop: Crop): Nutrient | null {
@@ -127,9 +129,10 @@ function historyReasons(
 function climateReasons(
   candidate: Crop,
   input: RecommendationInput,
+  sowMonth: MonthKey,
   harvest: MonthKey,
 ): { score: number; reasons: RecommendationReason[] } {
-  const cycleMonths = monthsFrom(input.sowMonth, monthsBetween(input.sowMonth, harvest) + 1);
+  const cycleMonths = monthsFrom(sowMonth, monthsBetween(sowMonth, harvest) + 1);
   let suitableMonths = 0;
   let pestMonths = 0;
   for (const month of cycleMonths) {
@@ -155,13 +158,26 @@ function climateReasons(
   return { score: (suitableMonths / totalMonths) * weights.climateFit + pestMonths * weights.pestMonth, reasons };
 }
 
+function bestSowingWindow(candidate: Crop, input: RecommendationInput) {
+  const windows = Array.from({ length: maximumSowingDelayInMonths + 1 }, (_, delay) => {
+    const sowMonth = addMonths(input.sowMonth, delay);
+    const harvest = harvestMonth(sowMonth, cycleLength(candidate));
+    return { delay, sowMonth, harvest, climate: climateReasons(candidate, input, sowMonth, harvest) };
+  });
+  return windows.reduce((best, window) => (window.climate.score > best.climate.score ? window : best));
+}
+
 export function recommendNextCrops(input: RecommendationInput): CropRecommendation[] {
   const recommendations = input.candidates.map((candidate) => {
-    const harvest = harvestMonth(input.sowMonth, cycleLength(candidate));
+    const window = bestSowingWindow(candidate, input);
     const history = historyReasons(candidate, input.lastCrop, input.previousUse, input.candidates);
-    const climate = climateReasons(candidate, input, harvest);
+    const climate = window.climate;
+    const harvest = window.harvest;
     const fitsAltitude = isWithin(input.lotElevationInMeters, candidate.altitudeInMeters);
     const reasons = [...history.reasons, ...climate.reasons];
+    if (window.delay > 0) {
+      reasons.push({ type: 'waitForBetterMonth', months: window.delay, positive: true });
+    }
     if (!fitsAltitude) {
       reasons.push({ type: 'altitudeOutOfRange', positive: false });
     }
@@ -169,7 +185,7 @@ export function recommendNextCrops(input: RecommendationInput): CropRecommendati
       cropKey: candidate.key,
       score: Math.round((history.score + climate.score) * 10) / 10,
       fitsAltitude,
-      sowMonth: input.sowMonth,
+      sowMonth: window.sowMonth,
       harvestMonth: harvest,
       reasons,
     };
