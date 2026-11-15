@@ -15,6 +15,7 @@ import { TerrainModule } from './terrain/terrain.module.js';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.getOrThrow<string>('MONGODB_URI'),
+        dbName: configService.getOrThrow<string>('DB_NAME'),
       }),
     }),
     TerrainModule,
