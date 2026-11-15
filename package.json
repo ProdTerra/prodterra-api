@@ -20,7 +20,9 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "seed:catalog": "nest build && node dist/catalog/seed/seedCatalog.js"
+    "db:seed": "nest build && node dist/database/seedDatabase.js",
+    "db:clean": "nest build && node dist/database/cleanDatabase.js",
+    "db:reset": "nest build && node dist/database/cleanDatabase.js --confirm && node dist/database/seedDatabase.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
