@@ -13,7 +13,6 @@ const potato: Crop = {
   demandLevel: 'high',
   nutrients: [{ nutrient: 'K', level: 'high' }],
   altitudeInMeters: range(1500, 3200),
-  latitudeInDegrees: range(-45, 60),
   temperatureInCelsius: range(8, 22),
   waterNeedInMillimetersPerCycle: range(500, 700),
   relativeHumidityInPercent: range(70, 90),

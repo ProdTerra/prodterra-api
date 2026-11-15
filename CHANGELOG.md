@@ -12,6 +12,7 @@
 - `SESSION_COOKIE_DOMAIN` (optional) sets the session cookie domain.
 
 ### Changed
+- Crops no longer have a latitude range (`latitudeInDegrees`); nothing used it.
 - The demo seed keeps the official MAG/SEPSA cycles and only fills the crops without a source (lettuce 75 days, chayote 150 days).
 - Planning uses the same reference cycle as the catalog.
 - CORS allows credentials for the configured `WEB_ORIGIN` origins.

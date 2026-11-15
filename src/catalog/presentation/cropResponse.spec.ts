@@ -11,7 +11,6 @@ const potato: Crop = {
   demandLevel: 'high',
   nutrients: [],
   altitudeInMeters: unknown,
-  latitudeInDegrees: unknown,
   temperatureInCelsius: unknown,
   waterNeedInMillimetersPerCycle: unknown,
   relativeHumidityInPercent: unknown,

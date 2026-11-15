@@ -45,7 +45,6 @@ function toCrop({ cycleSources, ...seed }: CropSeed): Crop {
   return {
     ...seed,
     altitudeInMeters: unknownRange,
-    latitudeInDegrees: unknownRange,
     temperatureInCelsius: unknownRange,
     waterNeedInMillimetersPerCycle: unknownRange,
     relativeHumidityInPercent: unknownRange,

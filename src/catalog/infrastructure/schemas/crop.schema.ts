@@ -43,9 +43,6 @@ export class CropDocument {
   altitudeInMeters!: RangeDocument;
 
   @Prop({ type: RangeSchema, default: () => ({}) })
-  latitudeInDegrees!: RangeDocument;
-
-  @Prop({ type: RangeSchema, default: () => ({}) })
   temperatureInCelsius!: RangeDocument;
 
   @Prop({ type: RangeSchema, default: () => ({}) })

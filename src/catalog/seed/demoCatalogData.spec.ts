@@ -15,7 +15,6 @@ describe('demo catalog data', () => {
     for (const crop of demoCrops) {
       const ranges = [
         crop.altitudeInMeters,
-        crop.latitudeInDegrees,
         crop.temperatureInCelsius,
         crop.waterNeedInMillimetersPerCycle,
         crop.relativeHumidityInPercent,
