@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 - 2026-11-15
+
+### Added
+- `POST /plans/evaluate` returns `climate` per lot: the 12 months of typical climate (mean, minimum and maximum temperature, humidity, rain per day and solar radiation) adjusted to the lot elevation, so the calendar can show the factors behind each alarm.
+
 ## 0.2.0 - 2026-11-15
 
 ### Added
