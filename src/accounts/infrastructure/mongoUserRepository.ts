@@ -39,12 +39,12 @@ export class MongoUserRepository extends UserRepository {
     await this.userModel.updateOne({ _id: userId }, { googleId }).exec();
   }
 
-  async updateAvatar(userId: string, avatarKey: string): Promise<User | null> {
+  async updateProfile(userId: string, changes: { name?: string; avatarKey?: string }): Promise<User | null> {
     if (!isValidObjectId(userId)) {
       return null;
     }
     const persistedUser = await this.userModel
-      .findByIdAndUpdate(userId, { avatarKey }, { new: true })
+      .findByIdAndUpdate(userId, changes, { new: true })
       .lean<PersistedUser>()
       .exec();
     return persistedUser ? withoutPasswordHash(toStoredUser(persistedUser)) : null;

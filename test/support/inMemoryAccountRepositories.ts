@@ -37,8 +37,8 @@ export class InMemoryUserRepository extends UserRepository {
     this.update(userId, { googleId });
   }
 
-  async updateAvatar(userId: string, avatarKey: string): Promise<User | null> {
-    this.update(userId, { avatarKey });
+  async updateProfile(userId: string, changes: { name?: string; avatarKey?: string }): Promise<User | null> {
+    this.update(userId, changes);
     const storedUser = this.storedUsers.find((candidate) => candidate.id === userId);
     return storedUser ? withoutPasswordHash(storedUser) : null;
   }

@@ -49,8 +49,8 @@ export class AccountService {
     return withoutPasswordHash(storedUser);
   }
 
-  async changeAvatar(userId: string, avatarKey: string): Promise<User | null> {
-    return this.userRepository.updateAvatar(userId, avatarKey);
+  async updateProfile(userId: string, changes: { name?: string; avatarKey?: string }): Promise<User | null> {
+    return this.userRepository.updateProfile(userId, changes);
   }
 
   async signInWithGoogle(profile: GoogleProfile, locale: Locale): Promise<User> {

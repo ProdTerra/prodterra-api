@@ -91,3 +91,32 @@ export function validatePasswordReset(body: unknown): ValidationResult<PasswordR
   const input = { token: readString(source.token), password: readString(source.password) };
   return toResult(input, validateNewPassword(input.password));
 }
+
+export type ProfileUpdateInput = { name?: string; avatarKey?: string };
+
+export type ProfileFieldError = { field: 'name' | 'avatarKey'; code: FieldErrorCode | 'invalidAvatar' | 'nothingToUpdate' };
+
+export function validateProfileUpdate(
+  body: unknown,
+  isAvatarKey: (value: unknown) => value is string,
+): { isValid: true; input: ProfileUpdateInput } | { isValid: false; errors: ProfileFieldError[] } {
+  const source = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {};
+  const input: ProfileUpdateInput = {};
+  const errors: ProfileFieldError[] = [];
+  if (source.name !== undefined) {
+    const name = readString(source.name).trim();
+    errors.push(...validateName(name).map(({ code }) => ({ field: 'name' as const, code })));
+    input.name = name;
+  }
+  if (source.avatarKey !== undefined) {
+    if (isAvatarKey(source.avatarKey)) {
+      input.avatarKey = source.avatarKey;
+    } else {
+      errors.push({ field: 'avatarKey', code: 'invalidAvatar' });
+    }
+  }
+  if (input.name === undefined && input.avatarKey === undefined && errors.length === 0) {
+    errors.push({ field: 'name', code: 'nothingToUpdate' });
+  }
+  return errors.length === 0 ? { isValid: true, input } : { isValid: false, errors };
+}

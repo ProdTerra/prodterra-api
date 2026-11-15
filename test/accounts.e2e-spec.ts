@@ -244,4 +244,18 @@ describe('auth endpoints', () => {
     expect(invalid.body).toEqual({ errors: [{ field: 'avatarKey', code: 'invalidAvatar' }] });
     expect((await request(server).patch('/auth/me').send({ avatarKey: 'farmer-01' })).status).toBe(401);
   });
+
+  it('changes the name shown in the profile and validates it', async () => {
+    const server = app.getHttpServer();
+    const registered = await request(server).post('/auth/register').send(registration);
+    const cookie = sessionCookieFrom(registered).split(';')[0];
+    const renamed = await request(server).patch('/auth/me').set('Cookie', cookie).send({ name: '  Ana María Solano ' });
+    expect(renamed.status).toBe(200);
+    expect(renamed.body.user.name).toBe('Ana María Solano');
+    const empty = await request(server).patch('/auth/me').set('Cookie', cookie).send({ name: '   ' });
+    expect(empty.body).toEqual({ errors: [{ field: 'name', code: 'nameRequired' }] });
+    const nothing = await request(server).patch('/auth/me').set('Cookie', cookie).send({});
+    expect(nothing.status).toBe(400);
+    expect((await request(server).get('/auth/me').set('Cookie', cookie)).body.user.name).toBe('Ana María Solano');
+  });
 });
