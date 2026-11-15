@@ -3,6 +3,7 @@ import { CatalogRepository } from '../../catalog/domain/catalogRepository.js';
 import type { Crop } from '../../catalog/domain/crop.js';
 import type { Pest } from '../../catalog/domain/pest.js';
 import { demoSourceLabel } from '../../catalog/seed/demoCatalogData.js';
+import type { MonthlyClimate } from '../../climate/domain/monthlyClimate.js';
 import { LotClimateProfileService } from '../../climate/application/lotClimateProfile.service.js';
 import { buildLotPlan, type LotPlan } from '../domain/lotPlan.js';
 import type { LotPlanRequest, PlanRequest } from '../domain/planRequest.js';
@@ -24,6 +25,7 @@ export type LotRotationEvaluation = {
   lotId: string;
   climateAvailable: boolean;
   elevationInMeters: number | null;
+  climate: MonthlyClimate[];
   farmer: EvaluatedRotation | null;
   recommended: EvaluatedRotation | null;
 };
@@ -75,7 +77,7 @@ export class PlanningService {
   private async evaluateLot(lot: LotRotationRequest, startDate: string, crops: Crop[], pests: Pest[]): Promise<LotRotationEvaluation> {
     const profile = await this.lotClimateProfileService.buildProfile(lot.boundary);
     if (!profile) {
-      return { lotId: lot.lotId, climateAvailable: false, elevationInMeters: null, farmer: null, recommended: null };
+      return { lotId: lot.lotId, climateAvailable: false, elevationInMeters: null, climate: [], farmer: null, recommended: null };
     }
     const context: RotationContext = {
       crops,
@@ -91,6 +93,7 @@ export class PlanningService {
       lotId: lot.lotId,
       climateAvailable: true,
       elevationInMeters: profile.elevation.meanInMeters,
+      climate: profile.months,
       farmer,
       recommended: recommendRotation(startDate, farmerEnd, context),
     };
