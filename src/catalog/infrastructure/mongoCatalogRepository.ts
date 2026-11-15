@@ -37,8 +37,11 @@ export class MongoCatalogRepository extends CatalogRepository {
     return this.pestModel.find({}, withoutDatabaseId).sort({ key: 1 }).lean<Pest[]>().exec();
   }
 
-  async replaceCatalogEntries(families: PlantFamily[], crops: Crop[], pests: Pest[]): Promise<void> {
+  async replaceCatalog(families: PlantFamily[], crops: Crop[], pests: Pest[]): Promise<void> {
     await Promise.all([
+      this.familyModel.deleteMany({ key: { $nin: families.map((family) => family.key) } }).exec(),
+      this.cropModel.deleteMany({ key: { $nin: crops.map((crop) => crop.key) } }).exec(),
+      this.pestModel.deleteMany({ key: { $nin: pests.map((pest) => pest.key) } }).exec(),
       ...families.map((family) => this.familyModel.replaceOne({ key: family.key }, family, { upsert: true }).exec()),
       ...crops.map((crop) => this.cropModel.replaceOne({ key: crop.key }, crop, { upsert: true }).exec()),
       ...pests.map((pest) => this.pestModel.replaceOne({ key: pest.key }, pest, { upsert: true }).exec()),

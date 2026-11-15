@@ -39,9 +39,25 @@ function toMonthlyClimate(response: PowerClimatologyResponse, month: MonthKey, i
   };
 }
 
+const cacheKeyDecimals = 2;
+
 @Injectable()
 export class NasaPowerClimatologyProvider extends ClimatologyProvider {
-  async findMonthlyClimatology(coordinates: Coordinates): Promise<GridClimatology> {
+  private readonly climatologyCache = new Map<string, Promise<GridClimatology>>();
+
+  findMonthlyClimatology(coordinates: Coordinates): Promise<GridClimatology> {
+    const key = `${coordinates.latitude.toFixed(cacheKeyDecimals)},${coordinates.longitude.toFixed(cacheKeyDecimals)}`;
+    const cached = this.climatologyCache.get(key);
+    if (cached) {
+      return cached;
+    }
+    const request = this.requestClimatology(coordinates);
+    this.climatologyCache.set(key, request);
+    request.catch(() => this.climatologyCache.delete(key));
+    return request;
+  }
+
+  private async requestClimatology(coordinates: Coordinates): Promise<GridClimatology> {
     const url = new URL(climatologyEndpoint);
     url.search = new URLSearchParams({
       parameters: parameterNames.join(','),

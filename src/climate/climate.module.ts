@@ -9,5 +9,6 @@ import { LotClimateProfileController } from './presentation/lotClimateProfile.co
   imports: [TerrainModule],
   controllers: [LotClimateProfileController],
   providers: [LotClimateProfileService, { provide: ClimatologyProvider, useClass: NasaPowerClimatologyProvider }],
+  exports: [LotClimateProfileService],
 })
 export class ClimateModule {}

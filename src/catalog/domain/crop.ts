@@ -16,7 +16,7 @@ export type Crop = {
   name: LocalizedName;
   scientificName: string;
   familyKey: string;
-  demandLevel: DemandLevel;
+  demandLevel: DemandLevel | null;
   nutrients: NutrientDemand[];
   altitudeInMeters: Range;
   latitudeInDegrees: Range;
