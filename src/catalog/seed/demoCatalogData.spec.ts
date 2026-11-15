@@ -1,14 +1,15 @@
 import type { Range } from '../domain/catalogValues.js';
-import { demoCrops, demoPests, demoSourceLabel } from './demoCatalogData.js';
-import { seedCrops, seedFamilies } from './catalogSeedData.js';
+import { demoCrops, demoFamilies, demoPests, demoSourceLabel } from './demoCatalogData.js';
 
 function isFilledRange(range: Range): boolean {
   return range.minimum !== null && range.maximum !== null && range.minimum <= range.maximum;
 }
 
 describe('demo catalog data', () => {
-  it('only uses the ten project crops', () => {
-    expect(demoCrops.map((crop) => crop.key)).toEqual(seedCrops.map((crop) => crop.key));
+  it('keeps its own ten fictitious crops, each linked to a demo family', () => {
+    const familyKeys = demoFamilies.map((family) => family.key);
+    expect(demoCrops).toHaveLength(10);
+    expect(demoCrops.every((crop) => familyKeys.includes(crop.familyKey))).toBe(true);
   });
 
   it('fills every range of every crop with a valid minimum and maximum', () => {
@@ -27,18 +28,14 @@ describe('demo catalog data', () => {
     }
   });
 
-  it('keeps the official cycle of every crop that has one and uses a single fixed cycle for every crop', () => {
+  it('uses a single fixed cycle for every crop', () => {
     for (const crop of demoCrops) {
-      const officialCycle = seedCrops.find((seedCrop) => seedCrop.key === crop.key)?.cycleLengthInDays;
-      if (officialCycle && officialCycle.minimum !== null) {
-        expect(crop.cycleLengthInDays).toEqual(officialCycle);
-      }
       expect(crop.cycleLengthInDays.minimum).toBe(crop.cycleLengthInDays.maximum);
     }
   });
 
   it('includes plenty of pests linked to families and crops that exist', () => {
-    const familyKeys = seedFamilies.map((family) => family.key);
+    const familyKeys = demoFamilies.map((family) => family.key);
     const cropKeys = demoCrops.map((crop) => crop.key);
     expect(demoPests.length).toBeGreaterThanOrEqual(15);
     expect(new Set(demoPests.map((pest) => pest.key)).size).toBe(demoPests.length);
@@ -46,7 +43,7 @@ describe('demo catalog data', () => {
       expect(pest.affectedFamilyKeys.length).toBeGreaterThan(0);
       expect(pest.affectedFamilyKeys.every((familyKey) => familyKeys.includes(familyKey))).toBe(true);
       expect(pest.onlyAffectsCropKeys.every((cropKey) => cropKeys.includes(cropKey))).toBe(true);
-      expect(isFilledRange(pest.temperatureInCelsius)).toBe(true);
+      expect(['disease', 'pest']).toContain(pest.type);
     }
   });
 
@@ -62,7 +59,7 @@ describe('demo catalog data', () => {
   });
 
   it('marks every demo value with the fictitious data source', () => {
-    for (const entry of [...demoCrops, ...demoPests]) {
+    for (const entry of [...demoFamilies, ...demoCrops, ...demoPests]) {
       expect(entry.sources.some((source) => source.label === demoSourceLabel)).toBe(true);
     }
   });

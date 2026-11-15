@@ -21,13 +21,31 @@ const potato: Crop = {
   sources: [],
 };
 
+const diamondbackMoth: Pest = {
+  key: 'diamondback-moth',
+  name: { es: 'Polilla dorso de diamante' },
+  scientificName: null,
+  type: 'pest',
+  affectedFamilyKeys: ['brassicaceae'],
+  onlyAffectsCropKeys: [],
+  sources: [],
+};
+
+const tomatoOnlyPest: Pest = {
+  key: 'tomato-only',
+  name: { es: 'Solo tomate' },
+  scientificName: null,
+  type: 'pest',
+  affectedFamilyKeys: ['solanaceae'],
+  onlyAffectsCropKeys: ['tomato'],
+  sources: [],
+};
+
 const lateBlight: Pest = {
   key: 'late-blight',
   name: { es: 'Tizón tardío', en: 'Late blight' },
   scientificName: 'Phytophthora infestans',
-  type: 'oomycete',
-  temperatureInCelsius: range(10, 25),
-  relativeHumidityInPercent: range(90, 100),
+  type: 'disease',
   affectedFamilyKeys: ['solanaceae'],
   onlyAffectsCropKeys: [],
   sources: [],
@@ -65,15 +83,46 @@ describe('assessMonth', () => {
     expect(assessment.alerts).toContainEqual({ type: 'frost', level: 'risk', minimumTemperatureInCelsius: 1.4 });
   });
 
-  it('warns about a pest when the month falls inside its temperature and humidity ranges', () => {
+  it('warns about every pest of the crop family when the mean temperature leaves the crop temperature range', () => {
+    const assessment = assessMonth({
+      crop: potato,
+      pests: [lateBlight, diamondbackMoth, tomatoOnlyPest],
+      climate: climate({ meanTemperatureInCelsius: 24 }),
+      hasIrrigation: true,
+    });
+    expect(assessment.alerts.filter((alert) => alert.type === 'pest')).toEqual([
+      { type: 'pest', level: 'watch', pestKey: 'late-blight' },
+    ]);
+  });
+
+  it('warns about the pests of the crop family when the humidity leaves the crop humidity range', () => {
+    const assessment = assessMonth({
+      crop: potato,
+      pests: [lateBlight, diamondbackMoth],
+      climate: climate({ relativeHumidityInPercent: 95 }),
+      hasIrrigation: true,
+    });
+    expect(assessment).toEqual({ status: 'watch', alerts: [{ type: 'pest', level: 'watch', pestKey: 'late-blight' }] });
+  });
+
+  it('raises no pest alert while temperature and humidity stay inside the crop ranges', () => {
     const assessment = assessMonth({
       crop: potato,
       pests: [lateBlight],
-      climate: climate({ relativeHumidityInPercent: 92 }),
+      climate: climate({ meanTemperatureInCelsius: 22, relativeHumidityInPercent: 70 }),
       hasIrrigation: true,
     });
-    expect(assessment.status).toBe('watch');
-    expect(assessment.alerts).toContainEqual({ type: 'pest', level: 'watch', pestKey: 'late-blight' });
+    expect(assessment.alerts.some((alert) => alert.type === 'pest')).toBe(false);
+  });
+
+  it('treats an unknown humidity bound as unbounded', () => {
+    const assessment = assessMonth({
+      crop: { ...potato, relativeHumidityInPercent: range(null, 90) },
+      pests: [lateBlight],
+      climate: climate({ relativeHumidityInPercent: 10 }),
+      hasIrrigation: true,
+    });
+    expect(assessment.alerts.some((alert) => alert.type === 'pest')).toBe(false);
   });
 
   it('recommends irrigation when rain is below the monthly water need and the lot has irrigation', () => {
@@ -118,7 +167,7 @@ describe('assessMonth', () => {
     expect(assessment.alerts.filter((alert) => ['drought', 'irrigation', 'waterExcess'].includes(alert.type))).toEqual([]);
   });
 
-  it('marks months warmer or colder than the crop range as risk', () => {
+  it('marks months whose mean temperature is warmer or colder than the crop range as risk', () => {
     const assessment = assessMonth({
       crop: potato,
       pests: [],
@@ -126,6 +175,16 @@ describe('assessMonth', () => {
       hasIrrigation: true,
     });
     expect(assessment.alerts).toContainEqual({ type: 'temperature', level: 'risk', meanTemperatureInCelsius: 25 });
+  });
+
+  it('ignores the daytime maximum when the mean temperature suits the crop', () => {
+    const assessment = assessMonth({
+      crop: potato,
+      pests: [lateBlight],
+      climate: climate({ meanTemperatureInCelsius: 13.8, maximumTemperatureInCelsius: 30 }),
+      hasIrrigation: true,
+    });
+    expect(assessment).toEqual({ status: 'ok', alerts: [] });
   });
 
   it('only warns about frost on a free lot', () => {

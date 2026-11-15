@@ -12,11 +12,9 @@ import { configureApplication } from '../src/configureApplication.js';
 
 const lateBlight: Pest = {
   key: 'late-blight',
-  name: { es: 'Tizón tardío', en: 'Late blight' },
+  name: { es: 'Tizón tardío' },
   scientificName: 'Phytophthora infestans',
-  type: 'oomycete',
-  temperatureInCelsius: { minimum: null, maximum: null },
-  relativeHumidityInPercent: { minimum: null, maximum: null },
+  type: 'disease',
   affectedFamilyKeys: ['solanaceae'],
   onlyAffectsCropKeys: [],
   sources: [],
@@ -73,8 +71,23 @@ describe('catalog endpoints', () => {
     expect(response.body.map((pest: Pest) => pest.key)).toEqual(['late-blight']);
   });
 
+  it('answers the Spanish name as English when a pest has no English name', async () => {
+    const response = await request(app.getHttpServer()).get('/catalog/pests');
+    expect(response.body[0]).toMatchObject({ key: 'late-blight', name: { es: 'Tizón tardío', en: 'Tizón tardío' }, type: 'disease' });
+    expect(response.body[0]).not.toHaveProperty('temperatureInCelsius');
+  });
+
+  it('serves the twelve crops of the spreadsheet with their English names', async () => {
+    const response = await request(app.getHttpServer()).get('/catalog/crops');
+    expect(response.body).toHaveLength(12);
+    expect(response.body.find((crop: Crop) => crop.key === 'avocado')).toMatchObject({
+      name: { es: 'Aguacate de bajura', en: 'Lowland avocado' },
+      referenceCycleInDays: 1825,
+    });
+  });
+
   it('answers not found for a crop outside the catalog', async () => {
-    const response = await request(app.getHttpServer()).get('/catalog/crops/coffee/pests');
+    const response = await request(app.getHttpServer()).get('/catalog/crops/strawberry/pests');
     expect(response.status).toBe(404);
   });
 });

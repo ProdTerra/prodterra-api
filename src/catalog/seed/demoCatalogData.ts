@@ -1,13 +1,56 @@
 import type { Range, Source } from '../domain/catalogValues.js';
 import type { Crop, DemandLevel, NutrientDemand } from '../domain/crop.js';
 import type { Pest, PestType } from '../domain/pest.js';
-import { seedCrops } from './catalogSeedData.js';
+import type { PlantFamily } from '../domain/plantFamily.js';
 
 export const demoSourceLabel = 'Dato de prueba ficticio para desarrollo. No usar en producción.';
 
 const demoSource: Source = { label: demoSourceLabel, url: null };
 
 const range = (minimum: number, maximum: number): Range => ({ minimum, maximum });
+
+export const demoFamilies: PlantFamily[] = [
+  { key: 'solanaceae', scientificName: 'Solanaceae', name: { es: 'Solanáceas', en: 'Nightshade family' }, sources: [demoSource] },
+  { key: 'amaryllidaceae', scientificName: 'Amaryllidaceae', name: { es: 'Amarilidáceas', en: 'Onion family' }, sources: [demoSource] },
+  { key: 'apiaceae', scientificName: 'Apiaceae', name: { es: 'Apiáceas', en: 'Carrot family' }, sources: [demoSource] },
+  { key: 'brassicaceae', scientificName: 'Brassicaceae', name: { es: 'Brasicáceas', en: 'Cabbage family' }, sources: [demoSource] },
+  { key: 'asteraceae', scientificName: 'Asteraceae', name: { es: 'Asteráceas', en: 'Daisy family' }, sources: [demoSource] },
+  { key: 'cucurbitaceae', scientificName: 'Cucurbitaceae', name: { es: 'Cucurbitáceas', en: 'Gourd family' }, sources: [demoSource] },
+  { key: 'rosaceae', scientificName: 'Rosaceae', name: { es: 'Rosáceas', en: 'Rose family' }, sources: [demoSource] },
+];
+
+type DemoCropIdentity = Pick<Crop, 'key' | 'name' | 'scientificName' | 'familyKey'> & { cycleInDays: number };
+
+const demoCropIdentities: DemoCropIdentity[] = [
+  { key: 'potato', name: { es: 'Papa', en: 'Potato' }, scientificName: 'Solanum tuberosum', familyKey: 'solanaceae', cycleInDays: 120 },
+  { key: 'onion', name: { es: 'Cebolla', en: 'Onion' }, scientificName: 'Allium cepa', familyKey: 'amaryllidaceae', cycleInDays: 120 },
+  { key: 'carrot', name: { es: 'Zanahoria', en: 'Carrot' }, scientificName: 'Daucus carota', familyKey: 'apiaceae', cycleInDays: 180 },
+  {
+    key: 'cabbage',
+    name: { es: 'Repollo', en: 'Cabbage' },
+    scientificName: 'Brassica oleracea var. capitata',
+    familyKey: 'brassicaceae',
+    cycleInDays: 112,
+  },
+  { key: 'lettuce', name: { es: 'Lechuga', en: 'Lettuce' }, scientificName: 'Lactuca sativa', familyKey: 'asteraceae', cycleInDays: 75 },
+  { key: 'chayote', name: { es: 'Chayote', en: 'Chayote' }, scientificName: 'Sechium edule', familyKey: 'cucurbitaceae', cycleInDays: 150 },
+  { key: 'tomato', name: { es: 'Tomate', en: 'Tomato' }, scientificName: 'Solanum lycopersicum', familyKey: 'solanaceae', cycleInDays: 180 },
+  {
+    key: 'broccoli',
+    name: { es: 'Brócoli', en: 'Broccoli' },
+    scientificName: 'Brassica oleracea var. italica',
+    familyKey: 'brassicaceae',
+    cycleInDays: 112,
+  },
+  {
+    key: 'cauliflower',
+    name: { es: 'Coliflor', en: 'Cauliflower' },
+    scientificName: 'Brassica oleracea var. botrytis',
+    familyKey: 'brassicaceae',
+    cycleInDays: 112,
+  },
+  { key: 'strawberry', name: { es: 'Fresa', en: 'Strawberry' }, scientificName: 'Fragaria × ananassa', familyKey: 'rosaceae', cycleInDays: 150 },
+];
 
 type DemoCropValues = {
   demandLevel: DemandLevel;
@@ -18,22 +61,6 @@ type DemoCropValues = {
   relativeHumidityInPercent: Range;
   solarRadiationInKilowattHoursPerSquareMeterPerDay: Range;
 };
-
-const demoCycleInDaysForUnsourcedCrops: Record<string, number> = {
-  lettuce: 75,
-  chayote: 150,
-};
-
-function demoCycle(crop: Crop): Range {
-  if (crop.cycleLengthInDays.minimum !== null) {
-    return crop.cycleLengthInDays;
-  }
-  const cycleInDays = demoCycleInDaysForUnsourcedCrops[crop.key];
-  if (cycleInDays === undefined) {
-    throw new Error(`Missing demo cycle for crop ${crop.key}`);
-  }
-  return range(cycleInDays, cycleInDays);
-}
 
 const demoValuesByCrop: Record<string, DemoCropValues> = {
   potato: {
@@ -128,12 +155,12 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
   },
 };
 
-export const demoCrops: Crop[] = seedCrops.map((crop) => {
-  const values = demoValuesByCrop[crop.key];
+export const demoCrops: Crop[] = demoCropIdentities.map(({ cycleInDays, ...identity }) => {
+  const values = demoValuesByCrop[identity.key];
   if (!values) {
-    throw new Error(`Missing demo values for crop ${crop.key}`);
+    throw new Error(`Missing demo values for crop ${identity.key}`);
   }
-  return { ...crop, ...values, cycleLengthInDays: demoCycle(crop), sources: [...crop.sources, demoSource] };
+  return { ...identity, ...values, cycleLengthInDays: range(cycleInDays, cycleInDays), sources: [demoSource] };
 });
 
 type DemoPest = {
@@ -142,31 +169,29 @@ type DemoPest = {
   en: string;
   scientificName: string;
   type: PestType;
-  temperature: [number, number];
-  humidity: [number, number] | null;
   families: string[];
   onlyCrops?: string[];
 };
 
 const demoPestRows: DemoPest[] = [
-  { key: 'late-blight', es: 'Tizón tardío', en: 'Late blight', scientificName: 'Phytophthora infestans', type: 'oomycete', temperature: [10, 25], humidity: [90, 100], families: ['solanaceae'] },
-  { key: 'early-blight', es: 'Tizón temprano', en: 'Early blight', scientificName: 'Alternaria solani', type: 'fungus', temperature: [20, 30], humidity: [80, 100], families: ['solanaceae'] },
-  { key: 'guatemalan-potato-moth', es: 'Polilla guatemalteca', en: 'Guatemalan potato moth', scientificName: 'Tecia solanivora', type: 'insect', temperature: [10, 25], humidity: [60, 90], families: ['solanaceae'], onlyCrops: ['potato'] },
-  { key: 'whitefly', es: 'Mosca blanca', en: 'Whitefly', scientificName: 'Bemisia tabaci', type: 'insect', temperature: [20, 32], humidity: [50, 80], families: ['solanaceae', 'cucurbitaceae'] },
-  { key: 'tomato-leafminer', es: 'Polilla del tomate', en: 'Tomato leafminer', scientificName: 'Tuta absoluta', type: 'insect', temperature: [15, 30], humidity: [50, 80], families: ['solanaceae'], onlyCrops: ['tomato'] },
-  { key: 'diamondback-moth', es: 'Polilla dorso de diamante', en: 'Diamondback moth', scientificName: 'Plutella xylostella', type: 'insect', temperature: [15, 30], humidity: [50, 85], families: ['brassicaceae'] },
-  { key: 'clubroot', es: 'Hernia de la col', en: 'Clubroot', scientificName: 'Plasmodiophora brassicae', type: 'other', temperature: [18, 25], humidity: [80, 100], families: ['brassicaceae'] },
-  { key: 'onion-downy-mildew', es: 'Mildiu de la cebolla', en: 'Onion downy mildew', scientificName: 'Peronospora destructor', type: 'oomycete', temperature: [10, 20], humidity: [95, 100], families: ['amaryllidaceae'] },
-  { key: 'purple-blotch', es: 'Mancha púrpura', en: 'Purple blotch', scientificName: 'Alternaria porri', type: 'fungus', temperature: [20, 30], humidity: [80, 100], families: ['amaryllidaceae'] },
-  { key: 'onion-thrips', es: 'Trips de la cebolla', en: 'Onion thrips', scientificName: 'Thrips tabaci', type: 'insect', temperature: [20, 30], humidity: [40, 70], families: ['amaryllidaceae', 'brassicaceae'] },
-  { key: 'carrot-leaf-blight', es: 'Quemazón de la hoja', en: 'Carrot leaf blight', scientificName: 'Alternaria dauci', type: 'fungus', temperature: [18, 28], humidity: [85, 100], families: ['apiaceae'] },
-  { key: 'root-knot-nematode', es: 'Nematodo agallador', en: 'Root-knot nematode', scientificName: 'Meloidogyne spp.', type: 'nematode', temperature: [20, 30], humidity: null, families: ['solanaceae', 'apiaceae', 'asteraceae', 'cucurbitaceae'] },
-  { key: 'green-peach-aphid', es: 'Pulgón verde', en: 'Green peach aphid', scientificName: 'Myzus persicae', type: 'insect', temperature: [15, 25], humidity: [50, 80], families: ['solanaceae', 'brassicaceae', 'asteraceae'] },
-  { key: 'lettuce-downy-mildew', es: 'Mildiu de la lechuga', en: 'Lettuce downy mildew', scientificName: 'Bremia lactucae', type: 'oomycete', temperature: [10, 20], humidity: [90, 100], families: ['asteraceae'] },
-  { key: 'white-mold', es: 'Moho blanco', en: 'White mold', scientificName: 'Sclerotinia sclerotiorum', type: 'fungus', temperature: [15, 25], humidity: [90, 100], families: ['asteraceae', 'brassicaceae', 'apiaceae'] },
-  { key: 'powdery-mildew-cucurbits', es: 'Oídio de las cucurbitáceas', en: 'Cucurbit powdery mildew', scientificName: 'Podosphaera xanthii', type: 'fungus', temperature: [20, 30], humidity: [50, 80], families: ['cucurbitaceae'] },
-  { key: 'gray-mold', es: 'Moho gris', en: 'Gray mold', scientificName: 'Botrytis cinerea', type: 'fungus', temperature: [15, 25], humidity: [90, 100], families: ['rosaceae', 'solanaceae', 'asteraceae'] },
-  { key: 'two-spotted-spider-mite', es: 'Araña roja', en: 'Two-spotted spider mite', scientificName: 'Tetranychus urticae', type: 'mite', temperature: [23, 32], humidity: [30, 60], families: ['rosaceae', 'solanaceae', 'cucurbitaceae'] },
+  { key: 'late-blight', es: 'Tizón tardío', en: 'Late blight', scientificName: 'Phytophthora infestans', type: 'disease', families: ['solanaceae'] },
+  { key: 'early-blight', es: 'Tizón temprano', en: 'Early blight', scientificName: 'Alternaria solani', type: 'disease', families: ['solanaceae'] },
+  { key: 'guatemalan-potato-moth', es: 'Polilla guatemalteca', en: 'Guatemalan potato moth', scientificName: 'Tecia solanivora', type: 'pest', families: ['solanaceae'], onlyCrops: ['potato'] },
+  { key: 'whitefly', es: 'Mosca blanca', en: 'Whitefly', scientificName: 'Bemisia tabaci', type: 'pest', families: ['solanaceae', 'cucurbitaceae'] },
+  { key: 'tomato-leafminer', es: 'Polilla del tomate', en: 'Tomato leafminer', scientificName: 'Tuta absoluta', type: 'pest', families: ['solanaceae'], onlyCrops: ['tomato'] },
+  { key: 'diamondback-moth', es: 'Polilla dorso de diamante', en: 'Diamondback moth', scientificName: 'Plutella xylostella', type: 'pest', families: ['brassicaceae'] },
+  { key: 'clubroot', es: 'Hernia de la col', en: 'Clubroot', scientificName: 'Plasmodiophora brassicae', type: 'disease', families: ['brassicaceae'] },
+  { key: 'onion-downy-mildew', es: 'Mildiu de la cebolla', en: 'Onion downy mildew', scientificName: 'Peronospora destructor', type: 'disease', families: ['amaryllidaceae'] },
+  { key: 'purple-blotch', es: 'Mancha púrpura', en: 'Purple blotch', scientificName: 'Alternaria porri', type: 'disease', families: ['amaryllidaceae'] },
+  { key: 'onion-thrips', es: 'Trips de la cebolla', en: 'Onion thrips', scientificName: 'Thrips tabaci', type: 'pest', families: ['amaryllidaceae', 'brassicaceae'] },
+  { key: 'carrot-leaf-blight', es: 'Quemazón de la hoja', en: 'Carrot leaf blight', scientificName: 'Alternaria dauci', type: 'disease', families: ['apiaceae'] },
+  { key: 'root-knot-nematode', es: 'Nematodo agallador', en: 'Root-knot nematode', scientificName: 'Meloidogyne spp.', type: 'pest', families: ['solanaceae', 'apiaceae', 'asteraceae', 'cucurbitaceae'] },
+  { key: 'green-peach-aphid', es: 'Pulgón verde', en: 'Green peach aphid', scientificName: 'Myzus persicae', type: 'pest', families: ['solanaceae', 'brassicaceae', 'asteraceae'] },
+  { key: 'lettuce-downy-mildew', es: 'Mildiu de la lechuga', en: 'Lettuce downy mildew', scientificName: 'Bremia lactucae', type: 'disease', families: ['asteraceae'] },
+  { key: 'white-mold', es: 'Moho blanco', en: 'White mold', scientificName: 'Sclerotinia sclerotiorum', type: 'disease', families: ['asteraceae', 'brassicaceae', 'apiaceae'] },
+  { key: 'powdery-mildew-cucurbits', es: 'Oídio de las cucurbitáceas', en: 'Cucurbit powdery mildew', scientificName: 'Podosphaera xanthii', type: 'disease', families: ['cucurbitaceae'] },
+  { key: 'gray-mold', es: 'Moho gris', en: 'Gray mold', scientificName: 'Botrytis cinerea', type: 'disease', families: ['rosaceae', 'solanaceae', 'asteraceae'] },
+  { key: 'two-spotted-spider-mite', es: 'Araña roja', en: 'Two-spotted spider mite', scientificName: 'Tetranychus urticae', type: 'pest', families: ['rosaceae', 'solanaceae', 'cucurbitaceae'] },
 ];
 
 export const demoPests: Pest[] = demoPestRows.map((row) => ({
@@ -174,8 +199,6 @@ export const demoPests: Pest[] = demoPestRows.map((row) => ({
   name: { es: row.es, en: row.en },
   scientificName: row.scientificName,
   type: row.type,
-  temperatureInCelsius: range(...row.temperature),
-  relativeHumidityInPercent: row.humidity ? range(...row.humidity) : { minimum: null, maximum: null },
   affectedFamilyKeys: row.families,
   onlyAffectsCropKeys: row.onlyCrops ?? [],
   sources: [demoSource],

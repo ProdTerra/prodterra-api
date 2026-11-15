@@ -27,4 +27,8 @@ describe('toCropResponse', () => {
   it('keeps the reference cycle empty when the cycle is unknown', () => {
     expect(toCropResponse({ ...potato, cycleLengthInDays: unknown }).referenceCycleInDays).toBeNull();
   });
+
+  it('falls back to the Spanish name when the crop has no English name', () => {
+    expect(toCropResponse({ ...potato, name: { es: 'Papa' } }).name).toEqual({ es: 'Papa', en: 'Papa' });
+  });
 });

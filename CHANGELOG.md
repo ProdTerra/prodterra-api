@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.0 - 2026-11-15
+
+### Added
+- `npm run db:seed` loads the real catalog from the team spreadsheet "base de datos productos agro": 8 families, 12 crops (potato, onion, tomato, eggplant, cilantro, sweet pepper, lowland avocado, cassava, sugarcane, cabbage, coffee, maize) with altitude, temperature, water per cycle, humidity, main nutrient and cycle, and 44 diseases and pests from the "Enfermedad" and "Plagas" columns, each linked to the families of the crops that list it. Sources come from the "links" sheet. English and scientific names were added with the team's approval. The eggplant disease and pest columns were swapped in the sheet and are loaded corrected, and the tomato minimum temperature (18 °C) is a team value.
+
+### Changed
+- Pest risk comes from the crop: a month gets one `pest` watch alert per pest of the crop family when its mean temperature or relative humidity leaves the crop optimal range. Pests no longer have `temperatureInCelsius` or `relativeHumidityInPercent`.
+- Pest `type` is now `disease` or `pest`.
+- `scientificName` of crops and pests can be null, `name.en` and the nutrient `level` are optional in the catalog; responses always return `name.en`, using the Spanish name when the English one is missing.
+- When a crop lists nutrients without levels, every listed nutrient counts as its main nutrient in the rotation comparison.
+- `POST /plans/evaluate` accepts blocks of up to 3650 days (was 730), so a 5-year avocado cycle fits.
+
+### Removed
+- Carrot, lettuce, chayote, broccoli, cauliflower and strawberry, and the Asteraceae, Cucurbitaceae and Rosaceae families, leave the real catalog because the spreadsheet does not have them. They stay in the demo catalog.
+
 ## 0.4.0 - 2026-11-15
 
 ### Changed

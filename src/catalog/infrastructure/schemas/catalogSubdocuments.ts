@@ -15,8 +15,8 @@ export class LocalizedNameDocument {
   @Prop({ required: true })
   es!: string;
 
-  @Prop({ required: true })
-  en!: string;
+  @Prop({ type: String, required: false })
+  en?: string;
 }
 export const LocalizedNameSchema = SchemaFactory.createForClass(LocalizedNameDocument);
 

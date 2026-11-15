@@ -98,4 +98,16 @@ describe('parseRotationEvaluationRequest', () => {
     const tooManyBlocks = { ...lot, blocks: Array.from({ length: 101 }, () => ({ kind: 'rest', durationInDays: 7 })) };
     expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [tooManyBlocks] }, today).valid).toBe(false);
   });
+
+  it('accepts one block of up to 3650 days, enough for a five year avocado cycle, and rejects a longer one', () => {
+    const avocado = { ...lot, blocks: [{ kind: 'crop', cropKey: 'avocado', durationInDays: 1825 }] };
+    expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [avocado] }, today).valid).toBe(true);
+    const tenYears = { ...lot, blocks: [{ kind: 'rest', durationInDays: 3650 }] };
+    expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [tenYears] }, today).valid).toBe(true);
+    const tooLong = { ...lot, blocks: [{ kind: 'rest', durationInDays: 3651 }] };
+    expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [tooLong] }, today)).toEqual({
+      valid: false,
+      error: 'lots[0] needs a boundary, previousUse, hasIrrigation and 1 to 100 blocks of 1-3650 days each',
+    });
+  });
 });
