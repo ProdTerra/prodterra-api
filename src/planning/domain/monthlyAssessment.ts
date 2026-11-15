@@ -2,6 +2,7 @@ import { referenceCycleInDays } from '../../catalog/domain/referenceCycle.js';
 import type { Range } from '../../catalog/domain/catalogValues.js';
 import type { Crop } from '../../catalog/domain/crop.js';
 import type { Pest } from '../../catalog/domain/pest.js';
+import { pestsThatAffect } from '../../catalog/domain/pestsForCrop.js';
 import type { MonthlyClimate } from '../../climate/domain/monthlyClimate.js';
 
 export type AlertLevel = 'watch' | 'risk';
@@ -51,22 +52,24 @@ function waterBalanceInLitersPerSquareMeter(crop: Crop, climate: MonthlyClimate)
   };
 }
 
-function pestsActiveFor(crop: Crop, pests: Pest[], climate: MonthlyClimate): Pest[] {
-  return pests.filter((pest) => {
-    const attacksCrop =
-      pest.affectedFamilyKeys.includes(crop.familyKey) &&
-      (pest.onlyAffectsCropKeys.length === 0 || pest.onlyAffectsCropKeys.includes(crop.key));
-    return (
-      attacksCrop &&
-      isWithin(climate.meanTemperatureInCelsius, pest.temperatureInCelsius) &&
-      isWithin(climate.relativeHumidityInPercent, pest.relativeHumidityInPercent)
-    );
-  });
+function fitsCropTemperature(crop: Crop, climate: MonthlyClimate): boolean {
+  return isWithin(climate.meanTemperatureInCelsius, crop.temperatureInCelsius);
+}
+
+function fitsCropHumidity(crop: Crop, climate: MonthlyClimate): boolean {
+  return isWithin(climate.relativeHumidityInPercent, crop.relativeHumidityInPercent);
+}
+
+function pestsThreateningCropOutOfRange(crop: Crop, pests: Pest[], climate: MonthlyClimate): Pest[] {
+  if (fitsCropTemperature(crop, climate) && fitsCropHumidity(crop, climate)) {
+    return [];
+  }
+  return pestsThatAffect(crop, pests);
 }
 
 function cropAlerts(crop: Crop, pests: Pest[], climate: MonthlyClimate, hasIrrigation: boolean): PlanAlert[] {
   const alerts: PlanAlert[] = [];
-  if (!isWithin(climate.meanTemperatureInCelsius, crop.temperatureInCelsius)) {
+  if (!fitsCropTemperature(crop, climate)) {
     alerts.push({ type: 'temperature', level: 'risk', meanTemperatureInCelsius: climate.meanTemperatureInCelsius });
   }
   const { deficit, excess } = waterBalanceInLitersPerSquareMeter(crop, climate);
@@ -80,7 +83,7 @@ function cropAlerts(crop: Crop, pests: Pest[], climate: MonthlyClimate, hasIrrig
   if (excess > 0) {
     alerts.push({ type: 'waterExcess', level: 'watch', litersPerSquareMeter: excess });
   }
-  for (const pest of pestsActiveFor(crop, pests, climate)) {
+  for (const pest of pestsThreateningCropOutOfRange(crop, pests, climate)) {
     alerts.push({ type: 'pest', level: 'watch', pestKey: pest.key });
   }
   return alerts;

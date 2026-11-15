@@ -10,8 +10,8 @@ The web app lives in a separate repository: `prodterra-web`.
 |---|---|
 | `GET /terrain/elevation?longitude&latitude` | NASADEM elevation of a point (Microsoft Planetary Computer). |
 | `POST /lots/climate-profile` | Lot elevation (mean, minimum, maximum) and NASA POWER monthly climatology adjusted to that elevation. |
-| `GET /catalog/families`, `/catalog/crops`, `/catalog/pests`, `/catalog/crops/:cropKey/pests` | Catalog. Crops include `referenceCycleInDays`, the default duration the farmer sees. |
-| `POST /plans/evaluate` | Farmer rotation per lot (start date, previous use, irrigation, crop and rest blocks) scheduled and assessed month by month (frost, temperature, irrigation, drought, pests), rotation warnings and a recommended rotation over the same horizon. |
+| `GET /catalog/families`, `/catalog/crops`, `/catalog/pests`, `/catalog/crops/:cropKey/pests` | Catalog. Crops include `referenceCycleInDays`, the default duration the farmer sees. Pests have a `type` (`disease` or `pest`) and no climate ranges. A missing English name is answered with the Spanish one. |
+| `POST /plans/evaluate` | Farmer rotation per lot (start date, previous use, irrigation, up to 100 crop and rest blocks of 1 to 3650 days) scheduled and assessed month by month (frost, temperature, irrigation, drought, pests), rotation warnings and a recommended rotation over the same horizon. A month gets one `pest` watch alert per pest of the crop family when its mean temperature or humidity leaves the crop optimal range. |
 | `POST /plans` | Earlier single-crop planner, kept for compatibility. |
 | `/auth/*` | Accounts and sessions, see below. |
 | `GET/POST /farms`, `GET/PUT/DELETE /farms/:farmId` | Saved farms of the logged-in user (others get 404). Error codes: `nameRequired`, `nameTooLong`, `invalidSnapshot`, `invalidLotCount`, `farmNotFound`. |
@@ -71,8 +71,8 @@ npm run start:dev         # http://localhost:4000
 
 | Command | What it does |
 |---|---|
-| `npm run db:seed` | Loads the 7 families and 10 project crops with verified fields only. |
-| `npm run db:seed:demo` | Loads approximate ranges and 18 pests for development. Refuses databases whose name does not end in `dev`, `development`, `test` or `demo`. |
+| `npm run db:seed` | Loads the real catalog from the team spreadsheet "base de datos productos agro": 8 families, 12 crops and 44 diseases and pests, with their sources. |
+| `npm run db:seed:demo` | Loads 7 fictitious families, 10 crops with approximate ranges and 18 pests for development. Refuses databases whose name does not end in `dev`, `development`, `test` or `demo`. |
 | `npm run db:clean -- --confirm` | Deletes the catalog collections. |
 | `npm run db:reset` | Clean and seed. |
 

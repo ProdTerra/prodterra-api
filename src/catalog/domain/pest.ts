@@ -1,15 +1,13 @@
-import type { LocalizedName, Range, Source } from './catalogValues.js';
+import type { LocalizedName, Source } from './catalogValues.js';
 
-export const pestTypes = ['insect', 'mite', 'fungus', 'oomycete', 'bacterium', 'virus', 'nematode', 'other'] as const;
+export const pestTypes = ['disease', 'pest'] as const;
 export type PestType = (typeof pestTypes)[number];
 
 export type Pest = {
   key: string;
   name: LocalizedName;
-  scientificName: string;
+  scientificName: string | null;
   type: PestType;
-  temperatureInCelsius: Range;
-  relativeHumidityInPercent: Range;
   affectedFamilyKeys: string[];
   onlyAffectsCropKeys: string[];
   sources: Source[];

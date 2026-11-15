@@ -5,6 +5,7 @@ import { CatalogRepository } from '../src/catalog/domain/catalogRepository.js';
 import type { Crop } from '../src/catalog/domain/crop.js';
 import type { Pest } from '../src/catalog/domain/pest.js';
 import type { PlantFamily } from '../src/catalog/domain/plantFamily.js';
+import { seedCrops, seedPests } from '../src/catalog/seed/catalogSeedData.js';
 import { demoCrops, demoPests } from '../src/catalog/seed/demoCatalogData.js';
 import { LotClimateProfileService } from '../src/climate/application/lotClimateProfile.service.js';
 import type { LotClimateProfile } from '../src/climate/domain/lotClimateProfile.js';
@@ -24,6 +25,21 @@ class DemoCatalogRepository extends CatalogRepository {
   }
   async findPests(): Promise<Pest[]> {
     return demoPests;
+  }
+}
+
+class SpreadsheetCatalogRepository extends CatalogRepository {
+  async findFamilies(): Promise<PlantFamily[]> {
+    return [];
+  }
+  async findCrops(): Promise<Crop[]> {
+    return seedCrops;
+  }
+  async findCropByKey(key: string): Promise<Crop | null> {
+    return seedCrops.find((crop) => crop.key === key) ?? null;
+  }
+  async findPests(): Promise<Pest[]> {
+    return seedPests;
   }
 }
 
@@ -115,5 +131,59 @@ describe('POST /plans', () => {
       .send({ lots: [{ lotId: 'lot-1', boundary }] });
     expect(response.status).toBe(400);
     expect(response.body.message).toContain('lots[0]');
+  });
+});
+
+describe('POST /plans/evaluate with the spreadsheet catalog', () => {
+  let app: INestApplication;
+  const today = new Date().toISOString().slice(0, 10);
+  const avocadoLot = (durationInDays: number) => ({
+    lotId: 'lot-1',
+    boundary,
+    previousUse: { kind: 'unknown' },
+    hasIrrigation: true,
+    blocks: [{ kind: 'crop', cropKey: 'avocado', durationInDays }],
+  });
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      controllers: [PlanningController],
+      providers: [
+        PlanningService,
+        { provide: CatalogRepository, useClass: SpreadsheetCatalogRepository },
+        { provide: LotClimateProfileService, useClass: FixedClimateProfileService },
+      ],
+    }).compile();
+    app = moduleRef.createNestApplication();
+    configureApplication(app);
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('accepts the 1825 day avocado cycle and warns about its family pests while the climate is out of its range', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/plans/evaluate')
+      .send({ startDate: today, lots: [avocadoLot(1825)] });
+    expect(response.status).toBe(200);
+    expect(response.body.usesDemoData).toBe(false);
+    const firstMonth = response.body.lots[0].farmer.months[0];
+    expect(firstMonth.alerts).toContainEqual({ type: 'temperature', level: 'risk', meanTemperatureInCelsius: 13 });
+    expect(firstMonth.alerts).toContainEqual({ type: 'pest', level: 'watch', pestKey: 'antracnosis' });
+    expect(response.body.pests.find((pest: { key: string }) => pest.key === 'cortadores')).toEqual({
+      key: 'cortadores',
+      name: { es: 'Cortadores', en: 'Cutworms' },
+      type: 'pest',
+    });
+  });
+
+  it('rejects a block longer than 3650 days', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/plans/evaluate')
+      .send({ startDate: today, lots: [avocadoLot(3651)] });
+    expect(response.status).toBe(400);
+    expect(response.body.message).toContain('1-3650 days');
   });
 });

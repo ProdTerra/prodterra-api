@@ -117,3 +117,26 @@ describe('choosing when to sow', () => {
     expect(recommendations[0].reasons.some((reason) => reason.type === 'waitForBetterMonth')).toBe(false);
   });
 });
+
+describe('comparing the main nutrient of two crops', () => {
+  const reasonsAfterPotato = (candidate: Crop) =>
+    recommendNextCrops({ ...baseInput, candidates: [candidate], lastCrop: potato })[0].reasons;
+
+  it('treats every listed nutrient as a main nutrient when the crop has no levels', () => {
+    const coffee = crop('coffee', 'rubiaceae', 'medium', [{ nutrient: 'N' }, { nutrient: 'K' }]);
+    expect(reasonsAfterPotato(coffee)).toContainEqual({ type: 'sameNutrient', nutrient: 'K', positive: false });
+  });
+
+  it('finds a different nutrient when no listed nutrient matches', () => {
+    const maize = crop('maize', 'poaceae', 'medium', [{ nutrient: 'N' }]);
+    expect(reasonsAfterPotato(maize)).toContainEqual({ type: 'differentNutrient', nutrient: 'N', positive: true });
+  });
+
+  it('still compares only the strongest nutrient when the crop has levels', () => {
+    const cabbageWithPotassium = crop('cabbage', 'brassicaceae', 'high', [
+      { nutrient: 'N', level: 'high' },
+      { nutrient: 'K', level: 'medium' },
+    ]);
+    expect(reasonsAfterPotato(cabbageWithPotassium)).toContainEqual({ type: 'differentNutrient', nutrient: 'N', positive: true });
+  });
+});

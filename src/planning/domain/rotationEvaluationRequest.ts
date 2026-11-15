@@ -18,7 +18,7 @@ export type ParsedRotationEvaluationRequest =
 
 const maximumLots = 30;
 const minimumBlockDays = 1;
-const maximumBlockDays = 730;
+const maximumBlockDays = 3650;
 const maximumBlocksPerLot = 100;
 const maximumStartDaysAhead = 365;
 const millisecondsPerDay = 86_400_000;

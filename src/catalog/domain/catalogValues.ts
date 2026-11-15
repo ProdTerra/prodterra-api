@@ -5,7 +5,7 @@ export type Range = {
 
 export type LocalizedName = {
   es: string;
-  en: string;
+  en?: string;
 };
 
 export type Source = {
