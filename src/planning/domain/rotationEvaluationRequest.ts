@@ -18,7 +18,8 @@ export type ParsedRotationEvaluationRequest =
 
 const maximumLots = 30;
 const minimumBlockDays = 1;
-const maximumPlanDays = 730;
+const maximumBlockDays = 730;
+const maximumBlocksPerLot = 100;
 const maximumStartDaysAhead = 365;
 const millisecondsPerDay = 86_400_000;
 const datePattern = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
@@ -44,25 +45,29 @@ function isBlock(value: unknown): value is RotationBlockInput {
   if (!isRecord(value) || typeof value.durationInDays !== 'number' || !Number.isInteger(value.durationInDays)) {
     return false;
   }
-  if (value.durationInDays < minimumBlockDays || value.durationInDays > maximumPlanDays) {
+  if (value.durationInDays < minimumBlockDays || value.durationInDays > maximumBlockDays) {
     return false;
   }
   return value.kind === 'rest' || (value.kind === 'crop' && typeof value.cropKey === 'string' && keyPattern.test(value.cropKey));
 }
 
 function isLotRotation(value: unknown): value is LotRotationRequest {
-  if (!isRecord(value) || !Array.isArray(value.blocks) || value.blocks.length === 0 || !value.blocks.every(isBlock)) {
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.blocks) ||
+    value.blocks.length === 0 ||
+    value.blocks.length > maximumBlocksPerLot ||
+    !value.blocks.every(isBlock)
+  ) {
     return false;
   }
-  const totalDays = (value.blocks as RotationBlockInput[]).reduce((sum, block) => sum + block.durationInDays, 0);
   return (
     typeof value.lotId === 'string' &&
     value.lotId.length > 0 &&
     value.lotId.length <= 64 &&
     isLotBoundary(value.boundary) &&
     isPreviousUse(value.previousUse) &&
-    typeof value.hasIrrigation === 'boolean' &&
-    totalDays <= maximumPlanDays
+    typeof value.hasIrrigation === 'boolean'
   );
 }
 
@@ -86,7 +91,7 @@ export function parseRotationEvaluationRequest(body: unknown, today: Date): Pars
   if (invalidIndex >= 0) {
     return {
       valid: false,
-      error: `lots[${invalidIndex}] needs a boundary, previousUse, hasIrrigation and 1+ blocks of ${minimumBlockDays}-${maximumPlanDays} days (${maximumPlanDays} days in total at most)`,
+      error: `lots[${invalidIndex}] needs a boundary, previousUse, hasIrrigation and 1 to ${maximumBlocksPerLot} blocks of ${minimumBlockDays}-${maximumBlockDays} days each`,
     };
   }
   return { valid: true, request: { startDate: body.startDate, lots: body.lots as LotRotationRequest[] } };
