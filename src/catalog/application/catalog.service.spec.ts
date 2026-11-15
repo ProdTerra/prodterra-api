@@ -15,7 +15,6 @@ function crop(key: string, familyKey: string): Crop {
     demandLevel: 'high',
     nutrients: [],
     altitudeInMeters: emptyRange,
-    latitudeInDegrees: emptyRange,
     temperatureInCelsius: emptyRange,
     waterNeedInMillimetersPerCycle: emptyRange,
     relativeHumidityInPercent: emptyRange,

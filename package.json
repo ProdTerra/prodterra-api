@@ -1,6 +1,6 @@
 {
   "name": "prodterra-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
   "author": "",
   "private": true,
@@ -20,7 +20,10 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "seed:catalog": "nest build && node dist/catalog/seed/seedCatalog.js"
+    "db:seed": "nest build && node dist/database/seedDatabase.js",
+    "db:clean": "nest build && node dist/database/cleanDatabase.js",
+    "db:reset": "nest build && node dist/database/cleanDatabase.js --confirm && node dist/database/seedDatabase.js",
+    "db:seed:demo": "nest build && node dist/database/seedDemoDatabase.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -28,9 +31,13 @@
     "@nestjs/core": "^12.0.1",
     "@nestjs/mongoose": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
+    "@nestjs/throttler": "^6.7.1",
+    "argon2": "^0.45.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "cookie": "^2.0.2",
     "mongoose": "^9.12.1",
+    "nodemailer": "^10.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -41,6 +48,7 @@
     "@nestjs/testing": "^12.0.1",
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.2",
     "oxlint": "^1.58.0",

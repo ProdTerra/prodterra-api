@@ -33,17 +33,14 @@ export class CropDocument {
   @Prop({ required: true, index: true })
   familyKey!: string;
 
-  @Prop({ type: String, enum: demandLevels, required: true })
-  demandLevel!: DemandLevel;
+  @Prop({ type: String, enum: [...demandLevels, null], default: null })
+  demandLevel!: DemandLevel | null;
 
   @Prop({ type: [NutrientDemandSchema], default: [] })
   nutrients!: NutrientDemandDocument[];
 
   @Prop({ type: RangeSchema, default: () => ({}) })
   altitudeInMeters!: RangeDocument;
-
-  @Prop({ type: RangeSchema, default: () => ({}) })
-  latitudeInDegrees!: RangeDocument;
 
   @Prop({ type: RangeSchema, default: () => ({}) })
   temperatureInCelsius!: RangeDocument;
