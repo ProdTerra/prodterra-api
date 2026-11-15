@@ -127,8 +127,10 @@ const cropSeeds: CropSeed[] = [
     familyKey: 'solanaceae',
     demandLevel: null,
     nutrients: [],
-    cycleLengthInDays: unknownRange,
-    cycleSources: [],
+    cycleLengthInDays: { minimum: 180, maximum: 180 },
+    cycleSources: [
+      costModelSource('tomate, Santa Bárbara de Heredia, Central Occidental (ciclo de 6 meses)', '03/TOMATE_CentralOccidental_veranera_2025.pdf'),
+    ],
   },
   {
     key: 'broccoli',
@@ -157,8 +159,10 @@ const cropSeeds: CropSeed[] = [
     familyKey: 'rosaceae',
     demandLevel: null,
     nutrients: [],
-    cycleLengthInDays: unknownRange,
-    cycleSources: [],
+    cycleLengthInDays: { minimum: 150, maximum: 150 },
+    cycleSources: [
+      costModelSource('fresa, Poás de Alajuela, Central Occidental (ciclo de 5 meses; la plantación produce hasta 1,3 años)', '03/FRESA_CentralOccidental_2025.pdf'),
+    ],
   },
 ];
 

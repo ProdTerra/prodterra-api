@@ -41,6 +41,26 @@ describe('catalog seed data', () => {
     const chayote = seedCrops.find((crop) => crop.key === 'chayote');
     expect(lettuce?.cycleLengthInDays).toEqual({ minimum: null, maximum: null });
     expect(chayote?.demandLevel).toBeNull();
+    expect(chayote?.cycleLengthInDays).toEqual({ minimum: null, maximum: null });
     expect(chayote?.nutrients).toEqual([]);
+  });
+});
+
+describe('standard cycle per crop', () => {
+  it('stores one fixed cycle length for every crop with an official source', () => {
+    const expectedCycles: Record<string, number> = {
+      potato: 120,
+      onion: 120,
+      carrot: 180,
+      cabbage: 112,
+      tomato: 180,
+      broccoli: 112,
+      cauliflower: 112,
+      strawberry: 150,
+    };
+    for (const [cropKey, days] of Object.entries(expectedCycles)) {
+      const crop = seedCrops.find((candidate) => candidate.key === cropKey);
+      expect(crop?.cycleLengthInDays).toEqual({ minimum: days, maximum: days });
+    }
   });
 });
