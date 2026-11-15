@@ -1,3 +1,4 @@
+import { referenceCycleInDays } from '../../catalog/domain/referenceCycle.js';
 import type { Range } from '../../catalog/domain/catalogValues.js';
 import type { Crop } from '../../catalog/domain/crop.js';
 import type { Pest } from '../../catalog/domain/pest.js';
@@ -40,7 +41,7 @@ function midpoint(range: Range): number | null {
 
 function waterDeficitInLitersPerSquareMeter(crop: Crop, climate: MonthlyClimate): number {
   const waterNeed = midpoint(crop.waterNeedInMillimetersPerCycle);
-  const cycleLength = midpoint(crop.cycleLengthInDays);
+  const cycleLength = referenceCycleInDays(crop.cycleLengthInDays);
   if (waterNeed === null || cycleLength === null || cycleLength <= 0) {
     return 0;
   }

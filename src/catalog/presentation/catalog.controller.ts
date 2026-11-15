@@ -1,8 +1,8 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { CatalogService } from '../application/catalog.service.js';
-import type { Crop } from '../domain/crop.js';
 import type { Pest } from '../domain/pest.js';
 import type { PlantFamily } from '../domain/plantFamily.js';
+import { toCropResponse, type CropResponse } from './cropResponse.js';
 
 @Controller('catalog')
 export class CatalogController {
@@ -14,8 +14,9 @@ export class CatalogController {
   }
 
   @Get('crops')
-  findCrops(): Promise<Crop[]> {
-    return this.catalogService.findCrops();
+  async findCrops(): Promise<CropResponse[]> {
+    const crops = await this.catalogService.findCrops();
+    return crops.map(toCropResponse);
   }
 
   @Get('pests')

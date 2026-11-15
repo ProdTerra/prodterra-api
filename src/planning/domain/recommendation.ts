@@ -1,3 +1,4 @@
+import { referenceCycleInDays } from '../../catalog/domain/referenceCycle.js';
 import type { Range } from '../../catalog/domain/catalogValues.js';
 import type { Crop, Nutrient } from '../../catalog/domain/crop.js';
 import type { Pest } from '../../catalog/domain/pest.js';
@@ -66,11 +67,7 @@ function isWithin(value: number, range: Range): boolean {
 }
 
 function cycleLength(crop: Crop): number {
-  const { minimum, maximum } = crop.cycleLengthInDays;
-  if (minimum !== null && maximum !== null) {
-    return (minimum + maximum) / 2;
-  }
-  return minimum ?? maximum ?? defaultCycleLengthInDays;
+  return referenceCycleInDays(crop.cycleLengthInDays) ?? defaultCycleLengthInDays;
 }
 
 function rotationReasons(candidate: Crop, reference: Crop): { score: number; reasons: RecommendationReason[] } {

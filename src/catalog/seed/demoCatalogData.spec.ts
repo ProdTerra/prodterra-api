@@ -28,6 +28,16 @@ describe('demo catalog data', () => {
     }
   });
 
+  it('keeps the official cycle of every crop that has one and uses a single fixed cycle for every crop', () => {
+    for (const crop of demoCrops) {
+      const officialCycle = seedCrops.find((seedCrop) => seedCrop.key === crop.key)?.cycleLengthInDays;
+      if (officialCycle && officialCycle.minimum !== null) {
+        expect(crop.cycleLengthInDays).toEqual(officialCycle);
+      }
+      expect(crop.cycleLengthInDays.minimum).toBe(crop.cycleLengthInDays.maximum);
+    }
+  });
+
   it('includes plenty of pests linked to families and crops that exist', () => {
     const familyKeys = seedFamilies.map((family) => family.key);
     const cropKeys = demoCrops.map((crop) => crop.key);
