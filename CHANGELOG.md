@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Account emails use a new template: ProdTerra logo and name at the top (`/prodterra-logo-email.png` from `WEB_APP_URL`), a white card on a light green background, a button plus the link as text for clients that block buttons, a hidden preview line, and a footer that says why the person got the email, in Spanish or English. The welcome email also says what ProdTerra does.
+
 ## 0.3.0 - 2026-11-15
 
 ### Added
