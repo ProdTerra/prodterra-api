@@ -50,3 +50,17 @@ export function validateSavedFarmInput(body: unknown): { input: SavedFarmInput }
   }
   return { input: { name, snapshot } };
 }
+
+function comparableFarmName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('es');
+}
+
+export function isFarmNameTaken(farms: Pick<SavedFarm, 'id' | 'name'>[], name: string, exceptFarmId?: string): boolean {
+  const comparableName = comparableFarmName(name);
+  return farms.some((farm) => farm.id !== exceptFarmId && comparableFarmName(farm.name) === comparableName);
+}
