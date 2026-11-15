@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Water alerts use the crop's water need range: below the minimum gives `irrigation` or `drought`, and above the maximum gives the new `waterExcess` alert (watch). Before, both used the midpoint.
 - `POST /plans/evaluate`: takes the farmer's rotation per lot (start date, previous use, irrigation, crop and rest blocks) and returns it scheduled and assessed month by month with NASA climate, rotation warnings (`sameFamilyInARow`, `shorterThanReference`, `altitudeOutOfRange`) and a recommended rotation over the same horizon.
 - Saved farms per user: `GET /farms`, `POST /farms`, `GET /farms/:farmId`, `PUT /farms/:farmId`, `DELETE /farms/:farmId`, only for the logged-in owner, with field error codes (`nameRequired`, `nameTooLong`, `invalidSnapshot`, `invalidLotCount`).
 - `GET /catalog/crops` returns `referenceCycleInDays`, the single crop cycle the farmer sees as the default duration.

@@ -16,7 +16,7 @@ function crop(key: string, familyKey: string, cycle: number): Crop {
     altitudeInMeters: range(1000, 3000),
     latitudeInDegrees: range(-60, 60),
     temperatureInCelsius: range(8, 26),
-    waterNeedInMillimetersPerCycle: range(300, 300),
+    waterNeedInMillimetersPerCycle: range(300, 1200),
     relativeHumidityInPercent: range(40, 95),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(2, 8),
     cycleLengthInDays: range(cycle, cycle),

@@ -12,7 +12,8 @@ export type PlanAlert =
   | { type: 'temperature'; level: 'risk'; meanTemperatureInCelsius: number }
   | { type: 'pest'; level: 'watch'; pestKey: string }
   | { type: 'irrigation'; level: 'watch'; litersPerSquareMeter: number }
-  | { type: 'drought'; level: 'risk'; litersPerSquareMeter: number };
+  | { type: 'drought'; level: 'risk'; litersPerSquareMeter: number }
+  | { type: 'waterExcess'; level: 'watch'; litersPerSquareMeter: number };
 
 export type MonthAssessment = { status: MonthStatus; alerts: PlanAlert[] };
 
@@ -32,23 +33,22 @@ function isWithin(value: number, range: Range): boolean {
   return aboveMinimum && belowMaximum;
 }
 
-function midpoint(range: Range): number | null {
-  if (range.minimum === null || range.maximum === null) {
-    return range.minimum ?? range.maximum;
-  }
-  return (range.minimum + range.maximum) / 2;
-}
+type WaterBalance = { deficit: number; excess: number };
 
-function waterDeficitInLitersPerSquareMeter(crop: Crop, climate: MonthlyClimate): number {
-  const waterNeed = midpoint(crop.waterNeedInMillimetersPerCycle);
+function waterBalanceInLitersPerSquareMeter(crop: Crop, climate: MonthlyClimate): WaterBalance {
   const cycleLength = referenceCycleInDays(crop.cycleLengthInDays);
-  if (waterNeed === null || cycleLength === null || cycleLength <= 0) {
-    return 0;
+  if (cycleLength === null || cycleLength <= 0) {
+    return { deficit: 0, excess: 0 };
   }
   const days = daysInMonth[climate.month - 1];
-  const need = (waterNeed / cycleLength) * days;
   const rain = climate.precipitationInMillimetersPerDay * days;
-  return Math.max(Math.round(need - rain), 0);
+  const monthlyNeed = (needPerCycle: number | null) => (needPerCycle === null ? null : (needPerCycle / cycleLength) * days);
+  const minimumNeed = monthlyNeed(crop.waterNeedInMillimetersPerCycle.minimum);
+  const maximumNeed = monthlyNeed(crop.waterNeedInMillimetersPerCycle.maximum);
+  return {
+    deficit: minimumNeed === null ? 0 : Math.max(Math.round(minimumNeed - rain), 0),
+    excess: maximumNeed === null ? 0 : Math.max(Math.round(rain - maximumNeed), 0),
+  };
 }
 
 function pestsActiveFor(crop: Crop, pests: Pest[], climate: MonthlyClimate): Pest[] {
@@ -69,13 +69,16 @@ function cropAlerts(crop: Crop, pests: Pest[], climate: MonthlyClimate, hasIrrig
   if (!isWithin(climate.meanTemperatureInCelsius, crop.temperatureInCelsius)) {
     alerts.push({ type: 'temperature', level: 'risk', meanTemperatureInCelsius: climate.meanTemperatureInCelsius });
   }
-  const deficit = waterDeficitInLitersPerSquareMeter(crop, climate);
+  const { deficit, excess } = waterBalanceInLitersPerSquareMeter(crop, climate);
   if (deficit > 0) {
     alerts.push(
       hasIrrigation
         ? { type: 'irrigation', level: 'watch', litersPerSquareMeter: deficit }
         : { type: 'drought', level: 'risk', litersPerSquareMeter: deficit },
     );
+  }
+  if (excess > 0) {
+    alerts.push({ type: 'waterExcess', level: 'watch', litersPerSquareMeter: excess });
   }
   for (const pest of pestsActiveFor(crop, pests, climate)) {
     alerts.push({ type: 'pest', level: 'watch', pestKey: pest.key });

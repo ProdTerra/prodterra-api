@@ -41,7 +41,7 @@ function climate(overrides: Partial<MonthlyClimate>): MonthlyClimate {
     minimumTemperatureInCelsius: 7.3,
     maximumTemperatureInCelsius: 20.5,
     relativeHumidityInPercent: 85,
-    precipitationInMillimetersPerDay: 8,
+    precipitationInMillimetersPerDay: 5,
     solarRadiationInKilowattHoursPerSquareMeterPerDay: 4.3,
     ...overrides,
   };
@@ -85,7 +85,7 @@ describe('assessMonth', () => {
       hasIrrigation: true,
     });
     expect(assessment.status).toBe('watch');
-    expect(assessment.alerts).toContainEqual({ type: 'irrigation', level: 'watch', litersPerSquareMeter: 78 });
+    expect(assessment.alerts).toContainEqual({ type: 'irrigation', level: 'watch', litersPerSquareMeter: 52 });
   });
 
   it('marks a water deficit as risk when the lot has no irrigation', () => {
@@ -95,7 +95,28 @@ describe('assessMonth', () => {
       climate: climate({ precipitationInMillimetersPerDay: 2.5, month: 3 }),
       hasIrrigation: false,
     });
-    expect(assessment.alerts).toContainEqual({ type: 'drought', level: 'risk', litersPerSquareMeter: 78 });
+    expect(assessment.alerts).toContainEqual({ type: 'drought', level: 'risk', litersPerSquareMeter: 52 });
+  });
+
+  it('warns about water excess when rain goes above the maximum water need of the crop', () => {
+    const assessment = assessMonth({
+      crop: potato,
+      pests: [],
+      climate: climate({ precipitationInMillimetersPerDay: 10, month: 6 }),
+      hasIrrigation: false,
+    });
+    expect(assessment.alerts).toContainEqual({ type: 'waterExcess', level: 'watch', litersPerSquareMeter: 125 });
+    expect(assessment.alerts.some((alert) => alert.type === 'drought')).toBe(false);
+  });
+
+  it('raises no water alert when rain stays between the minimum and maximum water need', () => {
+    const assessment = assessMonth({
+      crop: potato,
+      pests: [],
+      climate: climate({ precipitationInMillimetersPerDay: 5, month: 6 }),
+      hasIrrigation: false,
+    });
+    expect(assessment.alerts.filter((alert) => ['drought', 'irrigation', 'waterExcess'].includes(alert.type))).toEqual([]);
   });
 
   it('marks months warmer or colder than the crop range as risk', () => {
