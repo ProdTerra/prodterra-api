@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Added
+- Sign in and registration with Google (`GET /auth/google`, `GET /auth/google/callback`) using the authorization code flow with state and PKCE; accounts with the same verified email are linked.
+- Password reset by email (`POST /auth/password/forgot`, `POST /auth/password/reset`) with single-use links valid for 1 hour, stored only as SHA-256 hashes; a reset ends every session.
+- Account emails through Gmail SMTP: welcome, password reset link and password changed notice, in Spanish or English.
 - `POST /farms` and `PUT /farms/:farmId` return 409 `nameTaken` when the user already has a farm with the same name (ignoring case, accents and extra spaces).
 - Water alerts use the crop's water need range: below the minimum gives `irrigation` or `drought`, and above the maximum gives the new `waterExcess` alert (watch). Before, both used the midpoint.
 - `POST /plans/evaluate`: takes the farmer's rotation per lot (start date, previous use, irrigation, crop and rest blocks) and returns it scheduled and assessed month by month with NASA climate, rotation warnings (`sameFamilyInARow`, `shorterThanReference`, `altitudeOutOfRange`) and a recommended rotation over the same horizon.

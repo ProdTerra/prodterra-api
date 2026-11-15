@@ -22,4 +22,8 @@ export class MongoSessionRepository extends SessionRepository {
   async deleteByTokenHash(tokenHash: string): Promise<void> {
     await this.sessionModel.deleteOne({ tokenHash }).exec();
   }
+
+  async deleteByUserId(userId: string): Promise<void> {
+    await this.sessionModel.deleteMany({ userId }).exec();
+  }
 }

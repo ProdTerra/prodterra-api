@@ -30,6 +30,19 @@ export class MongoUserRepository extends UserRepository {
     return persistedUser ? toStoredUser(persistedUser) : null;
   }
 
+  async findByGoogleId(googleId: string): Promise<StoredUser | null> {
+    const persistedUser = await this.userModel.findOne({ googleId }).lean<PersistedUser>().exec();
+    return persistedUser ? toStoredUser(persistedUser) : null;
+  }
+
+  async linkGoogleAccount(userId: string, googleId: string): Promise<void> {
+    await this.userModel.updateOne({ _id: userId }, { googleId }).exec();
+  }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.userModel.updateOne({ _id: userId }, { passwordHash }).exec();
+  }
+
   async findById(id: string): Promise<User | null> {
     if (!isValidObjectId(id)) {
       return null;
@@ -44,7 +57,8 @@ function toStoredUser(persistedUser: PersistedUser): StoredUser {
     id: persistedUser._id.toString(),
     name: persistedUser.name,
     email: persistedUser.email,
-    passwordHash: persistedUser.passwordHash,
+    passwordHash: persistedUser.passwordHash ?? null,
+    googleId: persistedUser.googleId ?? null,
   };
 }
 

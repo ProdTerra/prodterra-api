@@ -8,7 +8,10 @@ export class UserDocument {
   @Prop({ required: true, unique: true })
   email!: string;
 
-  @Prop({ required: true })
-  passwordHash!: string;
+  @Prop({ type: String, default: null })
+  passwordHash!: string | null;
+
+  @Prop({ type: String, default: null, index: { unique: true, partialFilterExpression: { googleId: { $type: 'string' } } } })
+  googleId!: string | null;
 }
 export const UserSchema = SchemaFactory.createForClass(UserDocument);

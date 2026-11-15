@@ -5,13 +5,15 @@ export type User = {
 };
 
 export type StoredUser = User & {
-  passwordHash: string;
+  passwordHash: string | null;
+  googleId: string | null;
 };
 
 export type NewUser = {
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash: string | null;
+  googleId: string | null;
 };
 
 export function withoutPasswordHash(storedUser: StoredUser): User {
