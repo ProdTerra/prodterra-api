@@ -1,3 +1,4 @@
+import { referenceCycleInDays } from '../../catalog/domain/referenceCycle.js';
 import type { Crop } from '../../catalog/domain/crop.js';
 import type { Pest } from '../../catalog/domain/pest.js';
 import type { MonthlyClimate } from '../../climate/domain/monthlyClimate.js';
@@ -49,11 +50,7 @@ const estimatedCycleLengthInDays = 90;
 const recommendationsShown = 3;
 
 function knownCycleLength(crop: Crop): number | null {
-  const { minimum, maximum } = crop.cycleLengthInDays;
-  if (minimum !== null && maximum !== null) {
-    return (minimum + maximum) / 2;
-  }
-  return minimum ?? maximum;
+  return referenceCycleInDays(crop.cycleLengthInDays);
 }
 
 function planCurrentCrop(currentUse: CurrentUse, crops: Crop[]): { plan: CurrentCropPlan; crop: Crop } | null {

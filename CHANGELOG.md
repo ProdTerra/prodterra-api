@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `GET /catalog/crops` returns `referenceCycleInDays`, the single crop cycle the farmer sees as the default duration.
+
+### Changed
+- The demo seed keeps the official MAG/SEPSA cycles and only fills the crops without a source (lettuce 75 days, chayote 150 days).
+- Planning uses the same reference cycle as the catalog.
+
 ## 0.1.0 - 2026-11-14
 
 ### Added

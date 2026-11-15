@@ -18,8 +18,23 @@ type DemoCropValues = {
   waterNeedInMillimetersPerCycle: Range;
   relativeHumidityInPercent: Range;
   solarRadiationInKilowattHoursPerSquareMeterPerDay: Range;
-  cycleLengthInDays: Range;
 };
+
+const demoCycleInDaysForUnsourcedCrops: Record<string, number> = {
+  lettuce: 75,
+  chayote: 150,
+};
+
+function demoCycle(crop: Crop): Range {
+  if (crop.cycleLengthInDays.minimum !== null) {
+    return crop.cycleLengthInDays;
+  }
+  const cycleInDays = demoCycleInDaysForUnsourcedCrops[crop.key];
+  if (cycleInDays === undefined) {
+    throw new Error(`Missing demo cycle for crop ${crop.key}`);
+  }
+  return range(cycleInDays, cycleInDays);
+}
 
 const demoValuesByCrop: Record<string, DemoCropValues> = {
   potato: {
@@ -31,7 +46,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(500, 700),
     relativeHumidityInPercent: range(70, 90),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(3.5, 6),
-    cycleLengthInDays: range(100, 140),
   },
   onion: {
     demandLevel: 'medium',
@@ -42,7 +56,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(350, 550),
     relativeHumidityInPercent: range(60, 80),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(4.5, 6.5),
-    cycleLengthInDays: range(120, 180),
   },
   carrot: {
     demandLevel: 'medium',
@@ -53,7 +66,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(350, 550),
     relativeHumidityInPercent: range(65, 85),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(4, 6),
-    cycleLengthInDays: range(110, 180),
   },
   cabbage: {
     demandLevel: 'high',
@@ -64,7 +76,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(380, 500),
     relativeHumidityInPercent: range(70, 90),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(3.5, 5.5),
-    cycleLengthInDays: range(90, 120),
   },
   lettuce: {
     demandLevel: 'low',
@@ -75,7 +86,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(250, 350),
     relativeHumidityInPercent: range(60, 80),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(3.5, 5.5),
-    cycleLengthInDays: range(60, 90),
   },
   chayote: {
     demandLevel: 'medium',
@@ -86,7 +96,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(1200, 1800),
     relativeHumidityInPercent: range(70, 90),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(4, 6),
-    cycleLengthInDays: range(120, 180),
   },
   tomato: {
     demandLevel: 'high',
@@ -97,7 +106,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(400, 600),
     relativeHumidityInPercent: range(60, 80),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(5, 7),
-    cycleLengthInDays: range(120, 150),
   },
   broccoli: {
     demandLevel: 'high',
@@ -108,7 +116,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(400, 500),
     relativeHumidityInPercent: range(70, 90),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(3.5, 5.5),
-    cycleLengthInDays: range(100, 120),
   },
   cauliflower: {
     demandLevel: 'high',
@@ -119,7 +126,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(400, 500),
     relativeHumidityInPercent: range(70, 90),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(3.5, 5.5),
-    cycleLengthInDays: range(100, 120),
   },
   strawberry: {
     demandLevel: 'medium',
@@ -130,7 +136,6 @@ const demoValuesByCrop: Record<string, DemoCropValues> = {
     waterNeedInMillimetersPerCycle: range(400, 600),
     relativeHumidityInPercent: range(60, 80),
     solarRadiationInKilowattHoursPerSquareMeterPerDay: range(4, 6),
-    cycleLengthInDays: range(90, 150),
   },
 };
 
@@ -139,7 +144,7 @@ export const demoCrops: Crop[] = seedCrops.map((crop) => {
   if (!values) {
     throw new Error(`Missing demo values for crop ${crop.key}`);
   }
-  return { ...crop, ...values, sources: [...crop.sources, demoSource] };
+  return { ...crop, ...values, cycleLengthInDays: demoCycle(crop), sources: [...crop.sources, demoSource] };
 });
 
 type DemoPest = {

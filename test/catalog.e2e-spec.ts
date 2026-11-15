@@ -60,6 +60,13 @@ describe('catalog endpoints', () => {
     expect(response.body.map((crop: Crop) => [crop.key, crop.familyKey])).toContainEqual(['potato', 'solanaceae']);
   });
 
+  it('gives every crop a reference cycle computed from its cycle length', async () => {
+    const response = await request(app.getHttpServer()).get('/catalog/crops');
+    for (const crop of response.body as (Crop & { referenceCycleInDays: number | null })[]) {
+      expect(crop).toHaveProperty('referenceCycleInDays');
+    }
+  });
+
   it('lists the pests that affect a crop through its family', async () => {
     const response = await request(app.getHttpServer()).get('/catalog/crops/potato/pests');
     expect(response.status).toBe(200);
