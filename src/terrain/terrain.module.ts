@@ -7,5 +7,6 @@ import { TerrainController } from './presentation/terrain.controller.js';
 @Module({
   controllers: [TerrainController],
   providers: [TerrainService, { provide: ElevationProvider, useClass: PlanetaryComputerNasademProvider }],
+  exports: [ElevationProvider],
 })
 export class TerrainModule {}

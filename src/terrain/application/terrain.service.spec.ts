@@ -13,6 +13,10 @@ class FakeElevationProvider extends ElevationProvider {
     this.calls.push(coordinates);
     return this.elevation;
   }
+
+  async findElevationStatistics(): Promise<null> {
+    return null;
+  }
 }
 
 describe('TerrainService', () => {
