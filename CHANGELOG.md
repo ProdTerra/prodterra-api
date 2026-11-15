@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Saved farms per user: `GET /farms`, `POST /farms`, `GET /farms/:farmId`, `PUT /farms/:farmId`, `DELETE /farms/:farmId`, only for the logged-in owner, with field error codes (`nameRequired`, `nameTooLong`, `invalidSnapshot`, `invalidLotCount`).
 - `GET /catalog/crops` returns `referenceCycleInDays`, the single crop cycle the farmer sees as the default duration.
 - Accounts: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout` and `GET /auth/me`, with argon2id passwords, a 30-day httpOnly `prodterra_session` cookie (only its SHA-256 hash is stored), field-specific error codes and 10 requests per minute per IP on register and login.
 - `SESSION_COOKIE_DOMAIN` (optional) sets the session cookie domain.
