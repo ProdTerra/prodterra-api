@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 - 2026-11-15
 
 ### Added
 - `PATCH /auth/me` also changes the account name (`{ name }`, same rules as registration).
