@@ -39,6 +39,17 @@ export class MongoUserRepository extends UserRepository {
     await this.userModel.updateOne({ _id: userId }, { googleId }).exec();
   }
 
+  async updateAvatar(userId: string, avatarKey: string): Promise<User | null> {
+    if (!isValidObjectId(userId)) {
+      return null;
+    }
+    const persistedUser = await this.userModel
+      .findByIdAndUpdate(userId, { avatarKey }, { new: true })
+      .lean<PersistedUser>()
+      .exec();
+    return persistedUser ? withoutPasswordHash(toStoredUser(persistedUser)) : null;
+  }
+
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
     await this.userModel.updateOne({ _id: userId }, { passwordHash }).exec();
   }
@@ -57,6 +68,7 @@ function toStoredUser(persistedUser: PersistedUser): StoredUser {
     id: persistedUser._id.toString(),
     name: persistedUser.name,
     email: persistedUser.email,
+    avatarKey: persistedUser.avatarKey ?? null,
     passwordHash: persistedUser.passwordHash ?? null,
     googleId: persistedUser.googleId ?? null,
   };

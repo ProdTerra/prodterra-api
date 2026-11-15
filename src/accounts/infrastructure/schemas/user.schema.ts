@@ -11,6 +11,9 @@ export class UserDocument {
   @Prop({ type: String, default: null })
   passwordHash!: string | null;
 
+  @Prop({ type: String, default: null })
+  avatarKey!: string | null;
+
   @Prop({ type: String, default: null, index: { unique: true, partialFilterExpression: { googleId: { $type: 'string' } } } })
   googleId!: string | null;
 }

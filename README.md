@@ -25,7 +25,8 @@ Logging in is optional: the planner works without an account, and an account is 
 | `POST /auth/register` | `{ name, email, password }` | 201 `{ user }` and session cookie | 400 field errors, 409 `emailTaken` |
 | `POST /auth/login` | `{ email, password }` | 200 `{ user }` and session cookie | 400 field errors, 401 `invalidCredentials` |
 | `POST /auth/logout` | none | 204, session deleted and cookie cleared | |
-| `GET /auth/me` | none | 200 `{ user }` | 401 `notAuthenticated` |
+| `GET /auth/me` | none | 200 `{ user }` with `avatarKey` | 401 `notAuthenticated` |
+| `PATCH /auth/me` | `{ avatarKey }` (`farmer-01` to `farmer-10`) | 200 `{ user }` | 400 `invalidAvatar`, 401 `notAuthenticated` |
 | `POST /auth/password/forgot` | `{ email, locale? }` | 204 always; when the account exists, emails a single-use link valid for 1 hour | 400 field errors |
 | `POST /auth/password/reset` | `{ token, password, locale? }` | 200 `{ user }` and session cookie; ends every other session and emails a notice | 400 field errors, 400 `invalidResetLink` |
 | `GET /auth/google?returnTo&locale` | none | 302 to Google (state and PKCE kept in a 10-minute httpOnly cookie) | |

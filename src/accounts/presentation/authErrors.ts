@@ -24,3 +24,7 @@ export function tooManyAttemptsException(): HttpException {
 export function invalidResetLinkException(): BadRequestException {
   return new BadRequestException({ errors: [{ code: 'invalidResetLink' }] });
 }
+
+export function invalidAvatarException(): BadRequestException {
+  return new BadRequestException({ errors: [{ field: 'avatarKey', code: 'invalidAvatar' }] });
+}
