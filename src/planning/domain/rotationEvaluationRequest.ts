@@ -17,7 +17,7 @@ export type ParsedRotationEvaluationRequest =
   | { valid: false; error: string };
 
 const maximumLots = 30;
-const minimumBlockDays = 14;
+const minimumBlockDays = 1;
 const maximumPlanDays = 730;
 const maximumStartDaysAhead = 365;
 const millisecondsPerDay = 86_400_000;
