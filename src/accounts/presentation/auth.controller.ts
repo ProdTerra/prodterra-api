@@ -8,6 +8,7 @@ import {
   validateLogin,
   validatePasswordReset,
   validatePasswordResetRequest,
+  validateProfileUpdate,
   validateRegistration,
   type LoginInput,
   type RegistrationInput,
@@ -20,7 +21,7 @@ import {
   emailTakenException,
   invalidCredentialsException,
   invalidFieldsException,
-  invalidAvatarException,
+  invalidProfileException,
   invalidResetLinkException,
 } from './authErrors.js';
 import { AuthenticationThrottlerGuard } from './authenticationThrottling.js';
@@ -102,10 +103,11 @@ export class AuthController {
   @Patch('me')
   @UseGuards(SessionGuard)
   async updateCurrentUser(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<UserResponse> {
-    if (!isAvatarKey(body.avatarKey)) {
-      throw invalidAvatarException();
+    const result = validateProfileUpdate(body, isAvatarKey);
+    if (!result.isValid) {
+      throw invalidProfileException(result.errors);
     }
-    const updated = await this.accountService.changeAvatar(user.id, body.avatarKey);
+    const updated = await this.accountService.updateProfile(user.id, result.input);
     return toUserResponse(updated ?? user);
   }
 

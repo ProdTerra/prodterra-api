@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common';
-import type { FieldError } from '../domain/credentialsValidation.js';
+import type { FieldError, ProfileFieldError } from '../domain/credentialsValidation.js';
 
 export function invalidFieldsException(errors: FieldError[]): BadRequestException {
   return new BadRequestException({ errors });
@@ -25,6 +25,6 @@ export function invalidResetLinkException(): BadRequestException {
   return new BadRequestException({ errors: [{ code: 'invalidResetLink' }] });
 }
 
-export function invalidAvatarException(): BadRequestException {
-  return new BadRequestException({ errors: [{ field: 'avatarKey', code: 'invalidAvatar' }] });
+export function invalidProfileException(errors: ProfileFieldError[]): BadRequestException {
+  return new BadRequestException({ errors });
 }
