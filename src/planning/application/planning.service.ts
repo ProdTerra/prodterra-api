@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CatalogRepository } from '../../catalog/domain/catalogRepository.js';
 import type { Crop } from '../../catalog/domain/crop.js';
 import type { Pest } from '../../catalog/domain/pest.js';
+import { toLocalizedNameResponse, type LocalizedNameResponse } from '../../catalog/presentation/catalogResponses.js';
 import { demoSourceLabel } from '../../catalog/seed/demoCatalogData.js';
 import type { MonthlyClimate } from '../../climate/domain/monthlyClimate.js';
 import { LotClimateProfileService } from '../../climate/application/lotClimateProfile.service.js';
@@ -10,14 +11,25 @@ import type { LotPlanRequest, PlanRequest } from '../domain/planRequest.js';
 import { evaluateRotation, recommendRotation, type EvaluatedRotation, type RotationContext } from '../domain/rotationEvaluation.js';
 import type { LotRotationRequest, RotationEvaluationRequest } from '../domain/rotationEvaluationRequest.js';
 
+type CatalogCropSummary = Pick<Crop, 'key' | 'familyKey'> & { name: LocalizedNameResponse };
+type CatalogPestSummary = Pick<Pest, 'key' | 'type'> & { name: LocalizedNameResponse };
+
+function summarizeCrops(crops: Crop[]): CatalogCropSummary[] {
+  return crops.map(({ key, name, familyKey }) => ({ key, name: toLocalizedNameResponse(name), familyKey }));
+}
+
+function summarizePests(pests: Pest[]): CatalogPestSummary[] {
+  return pests.map(({ key, name, type }) => ({ key, name: toLocalizedNameResponse(name), type }));
+}
+
 export type LotPlanResult = LotPlan & { elevationInMeters: number | null; climateAvailable: boolean };
 
 export type PlanResult = {
   startMonth: string;
   horizonInMonths: number;
   usesDemoData: boolean;
-  crops: Pick<Crop, 'key' | 'name' | 'familyKey'>[];
-  pests: Pick<Pest, 'key' | 'name' | 'type'>[];
+  crops: CatalogCropSummary[];
+  pests: CatalogPestSummary[];
   lots: LotPlanResult[];
 };
 
@@ -33,8 +45,8 @@ export type LotRotationEvaluation = {
 export type RotationEvaluationResult = {
   startDate: string;
   usesDemoData: boolean;
-  crops: Pick<Crop, 'key' | 'name' | 'familyKey'>[];
-  pests: Pick<Pest, 'key' | 'name' | 'type'>[];
+  crops: CatalogCropSummary[];
+  pests: CatalogPestSummary[];
   lots: LotRotationEvaluation[];
 };
 
@@ -56,8 +68,8 @@ export class PlanningService {
       startMonth: request.startMonth,
       horizonInMonths: request.horizonInMonths,
       usesDemoData: usesDemoData(crops, pests),
-      crops: crops.map(({ key, name, familyKey }) => ({ key, name, familyKey })),
-      pests: pests.map(({ key, name, type }) => ({ key, name, type })),
+      crops: summarizeCrops(crops),
+      pests: summarizePests(pests),
       lots,
     };
   }
@@ -68,8 +80,8 @@ export class PlanningService {
     return {
       startDate: request.startDate,
       usesDemoData: usesDemoData(crops, pests),
-      crops: crops.map(({ key, name, familyKey }) => ({ key, name, familyKey })),
-      pests: pests.map(({ key, name, type }) => ({ key, name, type })),
+      crops: summarizeCrops(crops),
+      pests: summarizePests(pests),
       lots,
     };
   }

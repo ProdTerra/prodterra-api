@@ -14,8 +14,8 @@ export class NutrientDemandDocument {
   @Prop({ type: String, enum: nutrients, required: true })
   nutrient!: Nutrient;
 
-  @Prop({ type: String, enum: demandLevels, required: true })
-  level!: DemandLevel;
+  @Prop({ type: String, enum: demandLevels, required: false })
+  level?: DemandLevel;
 }
 const NutrientDemandSchema = SchemaFactory.createForClass(NutrientDemandDocument);
 
@@ -27,8 +27,8 @@ export class CropDocument {
   @Prop({ type: LocalizedNameSchema, required: true })
   name!: LocalizedNameDocument;
 
-  @Prop({ required: true })
-  scientificName!: string;
+  @Prop({ type: String, default: null })
+  scientificName!: string | null;
 
   @Prop({ required: true, index: true })
   familyKey!: string;

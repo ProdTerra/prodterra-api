@@ -8,13 +8,13 @@ export type DemandLevel = (typeof demandLevels)[number];
 
 export type NutrientDemand = {
   nutrient: Nutrient;
-  level: DemandLevel;
+  level?: DemandLevel;
 };
 
 export type Crop = {
   key: string;
   name: LocalizedName;
-  scientificName: string;
+  scientificName: string | null;
   familyKey: string;
   demandLevel: DemandLevel | null;
   nutrients: NutrientDemand[];

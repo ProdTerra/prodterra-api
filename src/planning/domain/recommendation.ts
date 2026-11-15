@@ -57,9 +57,15 @@ const defaultCycleLengthInDays = 90;
 const maximumSowingDelayInMonths = 3;
 const levelOrder = { high: 3, medium: 2, low: 1 } as const;
 
-function dominantNutrient(crop: Crop): Nutrient | null {
-  const [strongest] = [...crop.nutrients].sort((first, second) => levelOrder[second.level] - levelOrder[first.level]);
-  return strongest?.nutrient ?? null;
+function mainNutrients(crop: Crop): Nutrient[] {
+  const rankedNutrients = crop.nutrients.filter((demand) => demand.level !== undefined);
+  if (rankedNutrients.length === 0) {
+    return crop.nutrients.map((demand) => demand.nutrient);
+  }
+  const [strongest] = [...rankedNutrients].sort(
+    (first, second) => levelOrder[second.level ?? 'low'] - levelOrder[first.level ?? 'low'],
+  );
+  return [strongest.nutrient];
 }
 
 function isWithin(value: number, range: Range): boolean {
@@ -80,14 +86,15 @@ function rotationReasons(candidate: Crop, reference: Crop): { score: number; rea
     reasons.push({ type: 'differentFamily', positive: true });
     score += weights.differentFamily;
   }
-  const candidateNutrient = dominantNutrient(candidate);
-  const referenceNutrient = dominantNutrient(reference);
-  if (candidateNutrient && referenceNutrient) {
-    if (candidateNutrient === referenceNutrient) {
-      reasons.push({ type: 'sameNutrient', nutrient: candidateNutrient, positive: false });
+  const candidateNutrients = mainNutrients(candidate);
+  const referenceNutrients = mainNutrients(reference);
+  if (candidateNutrients.length > 0 && referenceNutrients.length > 0) {
+    const sharedNutrient = candidateNutrients.find((nutrient) => referenceNutrients.includes(nutrient));
+    if (sharedNutrient) {
+      reasons.push({ type: 'sameNutrient', nutrient: sharedNutrient, positive: false });
       score += weights.sameNutrient;
     } else {
-      reasons.push({ type: 'differentNutrient', nutrient: candidateNutrient, positive: true });
+      reasons.push({ type: 'differentNutrient', nutrient: candidateNutrients[0], positive: true });
       score += weights.differentNutrient;
     }
   }
