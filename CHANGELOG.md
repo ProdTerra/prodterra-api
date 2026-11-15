@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 - 2026-11-15
 
 ### Added
 - `npm run db:seed` loads the real catalog from the team spreadsheet "base de datos productos agro": 8 families, 12 crops (potato, onion, tomato, eggplant, cilantro, sweet pepper, lowland avocado, cassava, sugarcane, cabbage, coffee, maize) with altitude, temperature, water per cycle, humidity, main nutrient and cycle, and 44 diseases and pests from the "Enfermedad" and "Plagas" columns, each linked to the families of the crops that list it. Sources come from the "links" sheet. English and scientific names were added with the team's approval. The eggplant disease and pest columns were swapped in the sheet and are loaded corrected, and the tomato minimum temperature (18 °C) is a team value.
