@@ -15,6 +15,7 @@
 - `SESSION_COOKIE_DOMAIN` (optional) sets the session cookie domain.
 
 ### Changed
+- `POST /plans/evaluate` no longer limits a lot plan to 730 days in total: a lot accepts up to 100 blocks of 1 to 730 days each.
 - `POST /plans/evaluate` accepts blocks from 1 day (was 14), so short rests such as 3 days can be planned.
 - Crops no longer have a latitude range (`latitudeInDegrees`); nothing used it.
 - The demo seed keeps the official MAG/SEPSA cycles and only fills the crops without a source (lettuce 75 days, chayote 150 days).

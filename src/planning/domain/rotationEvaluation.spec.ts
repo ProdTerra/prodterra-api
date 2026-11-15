@@ -91,4 +91,11 @@ describe('parseRotationEvaluationRequest', () => {
     const shortRest = { ...lot, blocks: [{ kind: 'rest', durationInDays: 3 }] };
     expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [shortRest] }, today).valid).toBe(true);
   });
+
+  it('accepts a plan longer than two years made of several blocks', () => {
+    const fiveYears = { ...lot, blocks: Array.from({ length: 5 }, () => ({ kind: 'rest', durationInDays: 365 })) };
+    expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [fiveYears] }, today).valid).toBe(true);
+    const tooManyBlocks = { ...lot, blocks: Array.from({ length: 101 }, () => ({ kind: 'rest', durationInDays: 7 })) };
+    expect(parseRotationEvaluationRequest({ startDate: '2026-11-15', lots: [tooManyBlocks] }, today).valid).toBe(false);
+  });
 });
