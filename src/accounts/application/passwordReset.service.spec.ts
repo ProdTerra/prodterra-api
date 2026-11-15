@@ -21,7 +21,7 @@ async function createPasswordResetService() {
   const passwordHasher = new Argon2PasswordHasher();
   const mailSender = new RecordingMailSender();
   const accountMailer = new AccountMailer(mailSender, new WebAppSettings('https://app.prodterra.earth'));
-  const user = await userRepository.create({ name: 'Ana', email: 'ana@example.com', passwordHash: await passwordHasher.hash('old-password'), googleId: null });
+  const user = await userRepository.create({ name: 'Ana', email: 'ana@example.com', avatarKey: 'farmer-01', passwordHash: await passwordHasher.hash('old-password'), googleId: null });
   const service = new PasswordResetService(userRepository, passwordResetRepository, sessionRepository, passwordHasher, accountMailer);
   return { user, userRepository, passwordResetRepository, sessionRepository, passwordHasher, mailSender, service };
 }

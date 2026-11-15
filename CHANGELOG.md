@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Farmer avatars: every account gets one of 10 farmer avatars (`avatarKey`, `farmer-01` to `farmer-10`) at registration or first Google sign in, returned by the auth endpoints; `PATCH /auth/me` with `{ avatarKey }` changes it (400 `invalidAvatar` for unknown keys).
 - Sign in and registration with Google (`GET /auth/google`, `GET /auth/google/callback`) using the authorization code flow with state and PKCE; accounts with the same verified email are linked.
 - Password reset by email (`POST /auth/password/forgot`, `POST /auth/password/reset`) with single-use links valid for 1 hour, stored only as SHA-256 hashes; a reset ends every session.
 - Account emails through Gmail SMTP: welcome, password reset link and password changed notice, in Spanish or English.

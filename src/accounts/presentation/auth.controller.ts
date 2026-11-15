@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AccountService } from '../application/account.service.js';
 import { PasswordResetService } from '../application/passwordReset.service.js';
@@ -13,12 +13,14 @@ import {
   type RegistrationInput,
   type ValidationResult,
 } from '../domain/credentialsValidation.js';
+import { isAvatarKey } from '../domain/avatar.js';
 import { readLocale, type Locale } from '../domain/locale.js';
 import type { User } from '../domain/user.js';
 import {
   emailTakenException,
   invalidCredentialsException,
   invalidFieldsException,
+  invalidAvatarException,
   invalidResetLinkException,
 } from './authErrors.js';
 import { AuthenticationThrottlerGuard } from './authenticationThrottling.js';
@@ -95,6 +97,16 @@ export class AuthController {
   @UseGuards(SessionGuard)
   findCurrentUser(@CurrentUser() user: User): UserResponse {
     return toUserResponse(user);
+  }
+
+  @Patch('me')
+  @UseGuards(SessionGuard)
+  async updateCurrentUser(@CurrentUser() user: User, @Body() body: Record<string, unknown>): Promise<UserResponse> {
+    if (!isAvatarKey(body.avatarKey)) {
+      throw invalidAvatarException();
+    }
+    const updated = await this.accountService.changeAvatar(user.id, body.avatarKey);
+    return toUserResponse(updated ?? user);
   }
 
   private async registerOrReject(input: RegistrationInput, locale: Locale): Promise<User> {

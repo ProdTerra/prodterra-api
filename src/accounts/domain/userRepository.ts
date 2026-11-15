@@ -7,4 +7,5 @@ export abstract class UserRepository {
   abstract findById(id: string): Promise<User | null>;
   abstract linkGoogleAccount(userId: string, googleId: string): Promise<void>;
   abstract updatePasswordHash(userId: string, passwordHash: string): Promise<void>;
+  abstract updateAvatar(userId: string, avatarKey: string): Promise<User | null>;
 }

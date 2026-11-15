@@ -52,7 +52,12 @@ describe('AccountService', () => {
   it('creates an account without password the first time someone signs in with Google', async () => {
     const { userRepository, mailSender, accountService } = createAccountService();
     const user = await accountService.signInWithGoogle(googleProfile, 'es');
-    expect(user).toEqual({ id: expect.any(String), name: 'Ana Solano', email: 'ana@example.com' });
+    expect(user).toEqual({
+      id: expect.any(String),
+      name: 'Ana Solano',
+      email: 'ana@example.com',
+      avatarKey: expect.stringMatching(/^farmer-(0[1-9]|10)$/),
+    });
     expect(userRepository.storedUsers[0]).toMatchObject({ passwordHash: null, googleId: 'google-1' });
     expect(mailSender.sentMessages[0].subject).toBe('Bienvenido a ProdTerra');
     await expect(accountService.authenticate({ email: 'ana@example.com', password: 'anything-1' })).rejects.toThrow(

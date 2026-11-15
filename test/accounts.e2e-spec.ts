@@ -96,7 +96,9 @@ describe('auth endpoints', () => {
   it('registers, reads the current user from the cookie and logs out', async () => {
     const registered = await request(app.getHttpServer()).post('/auth/register').send(registration);
     expect(registered.status).toBe(201);
-    expect(registered.body).toEqual({ user: { id: expect.any(String), name: 'Ana Solano', email: 'ana@example.com' } });
+    expect(registered.body).toEqual({
+      user: { id: expect.any(String), name: 'Ana Solano', email: 'ana@example.com', avatarKey: expect.stringMatching(/^farmer-(0[1-9]|10)$/) },
+    });
     const cookie = sessionCookieFrom(registered);
     expect(cookie).toMatch(/HttpOnly/);
     expect(cookie).toMatch(/SameSite=Lax/);
@@ -212,7 +214,9 @@ describe('auth endpoints', () => {
     expect(finished.status).toBe(302);
     expect(finished.headers.location).toBe('http://localhost:3000/farms');
     const me = await request(server).get('/auth/me').set('Cookie', sessionCookieFrom(finished).split(';')[0]);
-    expect(me.body).toEqual({ user: { id: expect.any(String), name: 'Luis Mora', email: 'luis@example.com' } });
+    expect(me.body).toEqual({
+      user: { id: expect.any(String), name: 'Luis Mora', email: 'luis@example.com', avatarKey: expect.stringMatching(/^farmer-/) },
+    });
   });
 
   it('sends the farmer back with an error when the Google state does not match', async () => {
@@ -225,5 +229,19 @@ describe('auth endpoints', () => {
       .set('Cookie', attemptCookie);
     expect(finished.headers.location).toBe('http://localhost:3000/?authError=googleFailed');
     expect(finished.headers['set-cookie']?.toString()).not.toContain('prodterra_session=');
+  });
+
+  it('lets the farmer pick another farmer avatar and rejects unknown ones', async () => {
+    const server = app.getHttpServer();
+    const registered = await request(server).post('/auth/register').send(registration);
+    const cookie = sessionCookieFrom(registered).split(';')[0];
+    const changed = await request(server).patch('/auth/me').set('Cookie', cookie).send({ avatarKey: 'farmer-07' });
+    expect(changed.status).toBe(200);
+    expect(changed.body.user.avatarKey).toBe('farmer-07');
+    expect((await request(server).get('/auth/me').set('Cookie', cookie)).body.user.avatarKey).toBe('farmer-07');
+    const invalid = await request(server).patch('/auth/me').set('Cookie', cookie).send({ avatarKey: '../../etc/passwd' });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body).toEqual({ errors: [{ field: 'avatarKey', code: 'invalidAvatar' }] });
+    expect((await request(server).patch('/auth/me').send({ avatarKey: 'farmer-01' })).status).toBe(401);
   });
 });
