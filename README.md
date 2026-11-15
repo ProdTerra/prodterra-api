@@ -25,6 +25,25 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Accounts and sessions
+
+Logging in is optional: the planner works without an account, and an account is only needed to save farms and plans.
+
+| Endpoint | Body | Success | Errors |
+|---|---|---|---|
+| `POST /auth/register` | `{ name, email, password }` | 201 `{ user }` and session cookie | 400 field errors, 409 `emailTaken` |
+| `POST /auth/login` | `{ email, password }` | 200 `{ user }` and session cookie | 400 field errors, 401 `invalidCredentials` |
+| `POST /auth/logout` | none | 204, session deleted and cookie cleared | |
+| `GET /auth/me` | none | 200 `{ user }` | 401 `notAuthenticated` |
+
+`user` is `{ id, name, email }`; the password hash is never returned. Errors use one shape so the web can show them next to each field: `{ "errors": [{ "field": "email", "code": "invalidEmail" }] }`. Field codes: `nameRequired`, `nameTooLong` (80 characters), `invalidEmail`, `passwordRequired`, `passwordTooShort` (8 characters), `passwordTooLong` (128 characters). Register and login allow 10 requests per minute per IP and then answer 429 `tooManyAttempts`.
+
+- Passwords are hashed with argon2id. Emails are trimmed and stored in lowercase, unique per account.
+- The session token (32 random bytes) travels only in the `prodterra_session` cookie: httpOnly, SameSite=Lax, Path=/, Secure when `NODE_ENV=production`, 30 days. MongoDB stores only its SHA-256 hash, with a TTL index that removes expired sessions.
+- The web must call the API with credentials (`fetch(url, { credentials: 'include' })`); CORS allows credentials only for the origins in `WEB_ORIGIN`.
+- `SESSION_COOKIE_DOMAIN` (optional, empty by default) sets the cookie `Domain`, for example when the web and the API live on sibling subdomains.
+- Other modules protect routes with `@UseGuards(SessionGuard)` and read the user with `@CurrentUser()`, both exported by `AccountsModule`.
+
 ## Project setup
 
 ```bash
