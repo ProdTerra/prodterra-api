@@ -76,3 +76,18 @@ function validateLoginPassword(password: string): FieldError[] {
 function toResult<Input>(input: Input, errors: FieldError[]): ValidationResult<Input> {
   return errors.length === 0 ? { isValid: true, input } : { isValid: false, errors };
 }
+
+export type PasswordResetRequestInput = { email: string };
+
+export type PasswordResetInput = { token: string; password: string };
+
+export function validatePasswordResetRequest(body: unknown): ValidationResult<PasswordResetRequestInput> {
+  const input = { email: normalizeEmail(readFields(body).email) };
+  return toResult(input, validateEmail(input.email));
+}
+
+export function validatePasswordReset(body: unknown): ValidationResult<PasswordResetInput> {
+  const source = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {};
+  const input = { token: readString(source.token), password: readString(source.password) };
+  return toResult(input, validateNewPassword(input.password));
+}

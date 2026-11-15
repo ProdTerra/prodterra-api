@@ -8,7 +8,7 @@ const startTime = new Date('2026-11-14T12:00:00Z');
 async function createSessionServiceWithUser() {
   const userRepository = new InMemoryUserRepository();
   const sessionRepository = new InMemorySessionRepository();
-  const user = await userRepository.create({ name: 'Ana', email: 'ana@example.com', passwordHash: 'hash' });
+  const user = await userRepository.create({ name: 'Ana', email: 'ana@example.com', passwordHash: 'hash', googleId: null });
   return { user, sessionRepository, sessionService: new SessionService(sessionRepository, userRepository) };
 }
 

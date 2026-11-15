@@ -26,6 +26,12 @@ Logging in is optional: the planner works without an account, and an account is 
 | `POST /auth/login` | `{ email, password }` | 200 `{ user }` and session cookie | 400 field errors, 401 `invalidCredentials` |
 | `POST /auth/logout` | none | 204, session deleted and cookie cleared | |
 | `GET /auth/me` | none | 200 `{ user }` | 401 `notAuthenticated` |
+| `POST /auth/password/forgot` | `{ email, locale? }` | 204 always; when the account exists, emails a single-use link valid for 1 hour | 400 field errors |
+| `POST /auth/password/reset` | `{ token, password, locale? }` | 200 `{ user }` and session cookie; ends every other session and emails a notice | 400 field errors, 400 `invalidResetLink` |
+| `GET /auth/google?returnTo&locale` | none | 302 to Google (state and PKCE kept in a 10-minute httpOnly cookie) | |
+| `GET /auth/google/callback` | none | 302 to `WEB_APP_URL` + `returnTo` with the session cookie | 302 with `?authError=googleUnavailable`, `googleCancelled` or `googleFailed` |
+
+Registration and the first Google sign in send a welcome email. Google only signs in verified emails; an account with the same email is linked to Google. Accounts created with Google have no password until the farmer sets one through "forgot password". `locale` is `es` (default) or `en` and picks the email language.
 
 `user` is `{ id, name, email }`; the password hash is never returned. Errors use one shape so the web can show them next to each field: `{ "errors": [{ "field": "email", "code": "invalidEmail" }] }`. Field codes: `nameRequired`, `nameTooLong` (80 characters), `invalidEmail`, `passwordRequired`, `passwordTooShort` (8 characters), `passwordTooLong` (128 characters). Register and login allow 10 requests per minute per IP and then answer 429 `tooManyAttempts`.
 
@@ -55,6 +61,10 @@ npm run start:dev         # http://localhost:4000
 | `WEB_ORIGIN` | Web origins allowed by CORS (with credentials), comma separated. |
 | `SESSION_COOKIE_DOMAIN` | Optional cookie domain. Leave empty when the web and the API share a site such as `app.prodterra.earth` and `api.prodterra.earth`. |
 | `NODE_ENV` | Set to `production` on the server so the session cookie is `Secure`. |
+| `WEB_APP_URL` | Web app address for email links and the return after Google sign in. Defaults to `http://localhost:3000`; `https://app.prodterra.earth` on Render. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth web client from Google Cloud Console. Without them the Google button returns `googleUnavailable`. |
+| `GOOGLE_CALLBACK_URL` | Must match an authorized redirect URI of the client: `http://localhost:4000/auth/google/callback` locally, `https://api.prodterra.earth/auth/google/callback` on Render. |
+| `GMAIL_USER`, `GMAIL_APP_PASSWORD` | Gmail account and app password that send account emails. Without them emails are printed in the API log. |
 
 ### Database scripts
 

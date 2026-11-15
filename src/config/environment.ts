@@ -4,7 +4,22 @@ type Environment = {
   PORT?: string;
   WEB_ORIGIN?: string;
   SESSION_COOKIE_DOMAIN?: string;
+  WEB_APP_URL?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GOOGLE_CALLBACK_URL?: string;
+  GMAIL_USER?: string;
+  GMAIL_APP_PASSWORD?: string;
 };
+
+const optionalVariableNames = [
+  'WEB_APP_URL',
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'GOOGLE_CALLBACK_URL',
+  'GMAIL_USER',
+  'GMAIL_APP_PASSWORD',
+] as const;
 
 const databaseNamePattern = /^[A-Za-z0-9_-]{1,63}$/;
 const cookieDomainPattern = /^\.?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*$/;
@@ -26,6 +41,7 @@ export function validateEnvironment(variables: Record<string, unknown>): Environ
     PORT: typeof variables.PORT === 'string' ? variables.PORT : undefined,
     WEB_ORIGIN: typeof variables.WEB_ORIGIN === 'string' ? variables.WEB_ORIGIN : undefined,
     SESSION_COOKIE_DOMAIN: readSessionCookieDomain(variables.SESSION_COOKIE_DOMAIN),
+    ...readOptionalVariables(variables),
   };
 }
 
@@ -37,4 +53,20 @@ function readSessionCookieDomain(value: unknown): string | undefined {
     throw new Error('SESSION_COOKIE_DOMAIN is invalid. Leave it empty or use a domain such as prodterra.example.com.');
   }
   return value;
+}
+
+function readOptionalVariables(variables: Record<string, unknown>): Partial<Environment> {
+  const values: Partial<Environment> = {};
+  for (const name of optionalVariableNames) {
+    const value = variables[name];
+    if (typeof value === 'string' && value.trim() !== '') {
+      values[name] = value.trim();
+    }
+  }
+  for (const name of ['WEB_APP_URL', 'GOOGLE_CALLBACK_URL'] as const) {
+    if (values[name] !== undefined && !URL.canParse(values[name])) {
+      throw new Error(`${name} must be a full URL such as http://localhost:3000.`);
+    }
+  }
+  return values;
 }

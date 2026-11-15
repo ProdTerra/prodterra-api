@@ -2,28 +2,68 @@ import { type INestApplication } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { AccountMailer } from '../src/accounts/application/accountMailer.js';
 import { AccountService } from '../src/accounts/application/account.service.js';
+import { PasswordResetService } from '../src/accounts/application/passwordReset.service.js';
+import { WebAppSettings } from '../src/accounts/application/webAppSettings.js';
+import { GoogleIdentityProvider, type GoogleProfile } from '../src/accounts/domain/googleIdentityProvider.js';
+import { MailSender } from '../src/accounts/domain/mailSender.js';
+import { PasswordResetRepository } from '../src/accounts/domain/passwordResetRepository.js';
 import { SessionService } from '../src/accounts/application/session.service.js';
 import { PasswordHasher } from '../src/accounts/domain/passwordHasher.js';
 import { SessionRepository } from '../src/accounts/domain/sessionRepository.js';
 import { UserRepository } from '../src/accounts/domain/userRepository.js';
 import { Argon2PasswordHasher } from '../src/accounts/infrastructure/argon2PasswordHasher.js';
 import { AuthController } from '../src/accounts/presentation/auth.controller.js';
+import { GoogleAuthController } from '../src/accounts/presentation/googleAuth.controller.js';
 import { authenticationThrottlerOptions } from '../src/accounts/presentation/authenticationThrottling.js';
 import { SessionCookieSettings } from '../src/accounts/presentation/sessionCookie.js';
 import { SessionGuard } from '../src/accounts/presentation/sessionGuard.js';
 import { configureApplication } from '../src/configureApplication.js';
-import { InMemorySessionRepository, InMemoryUserRepository } from './support/inMemoryAccountRepositories.js';
+import {
+  InMemoryPasswordResetRepository,
+  InMemorySessionRepository,
+  InMemoryUserRepository,
+  RecordingMailSender,
+} from './support/inMemoryAccountRepositories.js';
 
 const registration = { name: '  Ana Solano ', email: ' Ana@Example.com ', password: 'cartago-2026' };
 
+class FakeGoogleIdentityProvider extends GoogleIdentityProvider {
+  profile: GoogleProfile = { googleId: 'google-1', email: 'luis@example.com', isEmailVerified: true, name: 'Luis Mora' };
+
+  isConfigured(): boolean {
+    return true;
+  }
+
+  authorizationUrl({ state, codeChallenge }: { state: string; codeChallenge: string }): string {
+    return `https://accounts.google.test/auth?state=${state}&code_challenge=${codeChallenge}`;
+  }
+
+  async profileFromCode(code: string): Promise<GoogleProfile> {
+    if (code !== 'valid-code') {
+      throw new Error('bad code');
+    }
+    return this.profile;
+  }
+}
+
+const mailSender = new RecordingMailSender();
+
 async function createAccountsApplication(): Promise<INestApplication> {
+  mailSender.sentMessages.length = 0;
   const moduleRef = await Test.createTestingModule({
     imports: [ThrottlerModule.forRoot(authenticationThrottlerOptions)],
-    controllers: [AuthController],
+    controllers: [AuthController, GoogleAuthController],
     providers: [
       AccountService,
+      AccountMailer,
+      PasswordResetService,
       SessionService,
+      { provide: PasswordResetRepository, useValue: new InMemoryPasswordResetRepository() },
+      { provide: MailSender, useValue: mailSender },
+      { provide: GoogleIdentityProvider, useValue: new FakeGoogleIdentityProvider() },
+      { provide: WebAppSettings, useValue: new WebAppSettings('http://localhost:3000') },
       SessionGuard,
       { provide: UserRepository, useValue: new InMemoryUserRepository() },
       { provide: SessionRepository, useValue: new InMemorySessionRepository() },
@@ -123,5 +163,67 @@ describe('auth endpoints', () => {
     const throttled = await request(app.getHttpServer()).post('/auth/login').send(credentials);
     expect(throttled.status).toBe(429);
     expect(throttled.body).toEqual({ errors: [{ code: 'tooManyAttempts' }] });
+  });
+
+  it('emails a reset link, sets the new password with it and signs the farmer in', async () => {
+    const server = app.getHttpServer();
+    await request(server).post('/auth/register').send(registration);
+    const forgot = await request(server).post('/auth/password/forgot').send({ email: 'ana@example.com', locale: 'es' });
+    expect(forgot.status).toBe(204);
+    const link = mailSender.sentMessages.at(-1)!.text.match(/http:\/\/localhost:3000\/reset-password\?token=\S+/)![0];
+    const token = new URL(link).searchParams.get('token');
+
+    const reset = await request(server).post('/auth/password/reset').send({ token, password: 'nueva-clave-1', locale: 'es' });
+    expect(reset.status).toBe(200);
+    expect(reset.body.user.email).toBe('ana@example.com');
+    const me = await request(server).get('/auth/me').set('Cookie', sessionCookieFrom(reset).split(';')[0]);
+    expect(me.status).toBe(200);
+    expect(mailSender.sentMessages.at(-1)!.subject).toBe('Tu contraseña de ProdTerra cambió');
+
+    const login = await request(server).post('/auth/login').send({ email: 'ana@example.com', password: 'nueva-clave-1' });
+    expect(login.status).toBe(200);
+    const reused = await request(server).post('/auth/password/reset').send({ token, password: 'otra-clave-12' });
+    expect(reused.status).toBe(400);
+    expect(reused.body).toEqual({ errors: [{ code: 'invalidResetLink' }] });
+  });
+
+  it('answers the same for an unknown email and validates the reset fields', async () => {
+    const server = app.getHttpServer();
+    expect((await request(server).post('/auth/password/forgot').send({ email: 'nobody@example.com' })).status).toBe(204);
+    expect(mailSender.sentMessages).toEqual([]);
+    const invalidEmail = await request(server).post('/auth/password/forgot').send({ email: 'nope' });
+    expect(invalidEmail.body).toEqual({ errors: [{ field: 'email', code: 'invalidEmail' }] });
+    const shortPassword = await request(server).post('/auth/password/reset').send({ token: 'x', password: 'short' });
+    expect(shortPassword.body).toEqual({ errors: [{ field: 'password', code: 'passwordTooShort' }] });
+  });
+
+  it('signs in with Google through state and PKCE and returns to the page the farmer was on', async () => {
+    const server = app.getHttpServer();
+    const started = await request(server).get('/auth/google').query({ returnTo: '/farms', locale: 'en' });
+    expect(started.status).toBe(302);
+    const googleUrl = new URL(started.headers.location);
+    expect(googleUrl.searchParams.get('code_challenge')).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    const attemptCookie = (started.headers['set-cookie'] as unknown as string[])[0].split(';')[0];
+
+    const finished = await request(server)
+      .get('/auth/google/callback')
+      .query({ code: 'valid-code', state: googleUrl.searchParams.get('state') })
+      .set('Cookie', attemptCookie);
+    expect(finished.status).toBe(302);
+    expect(finished.headers.location).toBe('http://localhost:3000/farms');
+    const me = await request(server).get('/auth/me').set('Cookie', sessionCookieFrom(finished).split(';')[0]);
+    expect(me.body).toEqual({ user: { id: expect.any(String), name: 'Luis Mora', email: 'luis@example.com' } });
+  });
+
+  it('sends the farmer back with an error when the Google state does not match', async () => {
+    const server = app.getHttpServer();
+    const started = await request(server).get('/auth/google').query({ returnTo: 'https://evil.example' });
+    const attemptCookie = (started.headers['set-cookie'] as unknown as string[])[0].split(';')[0];
+    const finished = await request(server)
+      .get('/auth/google/callback')
+      .query({ code: 'valid-code', state: 'forged-state' })
+      .set('Cookie', attemptCookie);
+    expect(finished.headers.location).toBe('http://localhost:3000/?authError=googleFailed');
+    expect(finished.headers['set-cookie']?.toString()).not.toContain('prodterra_session=');
   });
 });

@@ -1,17 +1,26 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AccountService } from '../application/account.service.js';
+import { PasswordResetService } from '../application/passwordReset.service.js';
 import { SessionService } from '../application/session.service.js';
-import { DuplicateEmailError, InvalidCredentialsError } from '../domain/accountErrors.js';
+import { DuplicateEmailError, InvalidCredentialsError, InvalidPasswordResetError } from '../domain/accountErrors.js';
 import {
   validateLogin,
+  validatePasswordReset,
+  validatePasswordResetRequest,
   validateRegistration,
   type LoginInput,
   type RegistrationInput,
   type ValidationResult,
 } from '../domain/credentialsValidation.js';
+import { readLocale, type Locale } from '../domain/locale.js';
 import type { User } from '../domain/user.js';
-import { emailTakenException, invalidCredentialsException, invalidFieldsException } from './authErrors.js';
+import {
+  emailTakenException,
+  invalidCredentialsException,
+  invalidFieldsException,
+  invalidResetLinkException,
+} from './authErrors.js';
 import { AuthenticationThrottlerGuard } from './authenticationThrottling.js';
 import { CurrentUser } from './currentUser.js';
 import { clearSessionCookie, readSessionToken, SessionCookieSettings, writeSessionCookie } from './sessionCookie.js';
@@ -23,6 +32,7 @@ export class AuthController {
   constructor(
     private readonly accountService: AccountService,
     private readonly sessionService: SessionService,
+    private readonly passwordResetService: PasswordResetService,
     private readonly sessionCookieSettings: SessionCookieSettings,
   ) {}
 
@@ -33,7 +43,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<UserResponse> {
     const input = requireValidInput(validateRegistration(body));
-    const user = await this.registerOrReject(input);
+    const user = await this.registerOrReject(input, readLocale(body.locale));
     await this.startSession(user, response);
     return toUserResponse(user);
   }
@@ -60,15 +70,36 @@ export class AuthController {
     clearSessionCookie(response, this.sessionCookieSettings);
   }
 
+  @Post('password/forgot')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthenticationThrottlerGuard)
+  async requestPasswordReset(@Body() body: Record<string, unknown>): Promise<void> {
+    const input = requireValidInput(validatePasswordResetRequest(body));
+    await this.passwordResetService.requestReset(input.email, readLocale(body.locale), new Date());
+  }
+
+  @Post('password/reset')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticationThrottlerGuard)
+  async resetPassword(
+    @Body() body: Record<string, unknown>,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<UserResponse> {
+    const input = requireValidInput(validatePasswordReset(body));
+    const user = await this.resetPasswordOrReject(input.token, input.password, readLocale(body.locale));
+    await this.startSession(user, response);
+    return toUserResponse(user);
+  }
+
   @Get('me')
   @UseGuards(SessionGuard)
   findCurrentUser(@CurrentUser() user: User): UserResponse {
     return toUserResponse(user);
   }
 
-  private async registerOrReject(input: RegistrationInput): Promise<User> {
+  private async registerOrReject(input: RegistrationInput, locale: Locale): Promise<User> {
     try {
-      return await this.accountService.register(input);
+      return await this.accountService.register(input, locale);
     } catch (error) {
       throw error instanceof DuplicateEmailError ? emailTakenException() : error;
     }
@@ -79,6 +110,14 @@ export class AuthController {
       return await this.accountService.authenticate(input);
     } catch (error) {
       throw error instanceof InvalidCredentialsError ? invalidCredentialsException() : error;
+    }
+  }
+
+  private async resetPasswordOrReject(token: string, password: string, locale: Locale): Promise<User> {
+    try {
+      return await this.passwordResetService.resetPassword(token, password, locale, new Date());
+    } catch (error) {
+      throw error instanceof InvalidPasswordResetError ? invalidResetLinkException() : error;
     }
   }
 

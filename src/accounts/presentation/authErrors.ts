@@ -20,3 +20,7 @@ export function notAuthenticatedException(): UnauthorizedException {
 export function tooManyAttemptsException(): HttpException {
   return new HttpException({ errors: [{ code: 'tooManyAttempts' }] }, HttpStatus.TOO_MANY_REQUESTS);
 }
+
+export function invalidResetLinkException(): BadRequestException {
+  return new BadRequestException({ errors: [{ code: 'invalidResetLink' }] });
+}
